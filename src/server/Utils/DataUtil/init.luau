@@ -83,6 +83,13 @@ function DataUtil:SetupReplica(Player: Player)
 	_replica:Set({ "Index" }, Profile.Data.Index)
 end
 
+function DataUtil:FirstTimePlayer(Player: Player): boolean
+	local Profile = Profiles[Player]
+	if Profile then
+		return Profile.Data.NewPlayer
+	end
+end
+
 function DataUtil:_SetupLeaderstats(Player: Player)
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
@@ -191,6 +198,7 @@ end
 function DataUtil:CleanupProfile(Player: Player)
 	if Profiles[Player] then
 		Profiles[Player].Data.LastJoin = tick()
+		Profiles[Player].NewPlayer = false
 		Profiles[Player]:EndSession()
 	end
 end

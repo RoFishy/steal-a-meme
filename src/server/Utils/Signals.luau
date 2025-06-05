@@ -10,4 +10,6 @@ return {
 	AddMemeToPlayer = Signal.new(),
 	RemoveMemeFromPlayer = Signal.new(),
 	IncrementCash = Signal.new(),
+
+	PlayerCollectedCash = Signal.new(),
 }

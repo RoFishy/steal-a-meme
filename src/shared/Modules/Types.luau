@@ -3,6 +3,7 @@ export type UserData = {
 	Slots: { [number]: string },
 	LastJoin: number?,
 	Index: {},
+	NewPlayer: boolean,
 }
 
 export type MemeSpawn = {

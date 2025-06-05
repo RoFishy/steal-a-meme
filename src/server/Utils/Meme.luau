@@ -258,6 +258,7 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 		CollectButton.Touched:Connect(function(Hit: Part)
 			local Player = Players:GetPlayerFromCharacter(Hit.Parent)
 			if Player and Player == self.PurchasePlayer then
+				Signal.PlayerCollectedCash:Fire(self.PurchasePlayer)
 				Signal.IncrementCash:Fire(Player, self.CurrentEarned)
 				self.CurrentEarned = 0
 				CollectButton.Attachment.Billboard.Frame.amount.Text = `${FormatNumber(self.CurrentEarned)}`

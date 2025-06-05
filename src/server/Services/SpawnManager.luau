@@ -94,6 +94,10 @@ function SpawnManager:Start()
 	end
 end
 
+function SpawnManager:GetCurrentMemes()
+	return CurrentMemes
+end
+
 function SpawnManager:GetRandomRarity()
 	local RandomNumber = math.random(self.Sum)
 	for Name, Value in pairs(Spawns) do

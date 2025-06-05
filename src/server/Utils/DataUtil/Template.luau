@@ -9,6 +9,7 @@ local DataTemplate: Types.UserData = {
 	Slots = {},
 	LastJoin = nil,
 	Index = {},
+	NewPlayer = true,
 }
 
 return DataTemplate

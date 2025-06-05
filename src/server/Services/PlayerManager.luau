@@ -9,6 +9,7 @@ local BaseManager = require(script.Parent.BaseManager)
 local Utils = script.Parent.Parent.Utils
 local DataUtil = require(Utils.DataUtil)
 local Signals = require(Utils.Signals)
+local TutorialUtil = require(Utils.TutorialUtil)
 
 -- // Packages
 local Packages = ReplicatedStorage.Packages
@@ -23,6 +24,11 @@ function PlayerManager:Start()
 			DataUtil.new(Player)
 		end)
 		BaseManager:AssignBase(Player)
+		task.delay(1, function()
+			if DataUtil:FirstTimePlayer(Player) then
+				TutorialUtil.new(Player)
+			end
+		end)
 	end)
 	Players.PlayerRemoving:Connect(function(Player)
 		local Base = BaseManager:GetBaseNameFromPlayer(Player)

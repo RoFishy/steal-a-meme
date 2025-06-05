@@ -14,9 +14,19 @@ local Cash = leaderstats.Cash
 
 local Camera = workspace.CurrentCamera
 
+-- // obj
+local Objects = ReplicatedStorage:WaitForChild("Objects")
+local Beam = Objects.Beam
+
 -- // Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local ShowNotification = Remotes.ShowNotification
+
+local ShowTutorialFrame = Remotes.ShowTutorialFrame
+local HideTutorialFrame = Remotes.HideTutorialFrame
+
+local ShowBeam = Remotes.ShowBeam
+local HideBeam = Remotes.HideBeam
 
 -- // Lighting
 local Blur = Lighting:WaitForChild("Blur")
@@ -40,6 +50,8 @@ local MiscUI = MainUI:WaitForChild("Misc")
 local BlackFrame = MiscUI.Black
 local NotificationHolder = MiscUI.NotificationHolder
 local NotificationTemplate = NotificationHolder.NotificationTemplate
+
+local TutorialFrame = HUD.Tutorial
 
 -- // Utils
 local Utils = script.Utils
@@ -112,6 +124,43 @@ function UIHandler:Start()
 	-- // Remotes
 	ShowNotification.OnClientEvent:Connect(function(Text: string, Color: Color3?)
 		self:ShowNotification(Text, Color)
+	end)
+
+	-- // tutorial
+	ShowTutorialFrame.OnClientEvent:Connect(function(Text: string)
+		TutorialFrame.Visible = true
+		TutorialFrame.desc.Text = Text
+		TweenService:Create(TutorialFrame.UIScale, TweenInfo.new(0.3), { Scale = 1 }):Play()
+	end)
+	HideTutorialFrame.OnClientEvent:Connect(function()
+		TweenService:Create(TutorialFrame.UIScale, TweenInfo.new(0.3), { Scale = 0 }):Play()
+		task.wait(0.3)
+		TutorialFrame.Visible = false
+	end)
+
+	local currentBeamStuff = {}
+	ShowBeam.OnClientEvent:Connect(function(part1, part2)
+		local BeamClone = Beam:Clone()
+		BeamClone.Parent = part1
+		local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+		a0.Parent = part1
+		a1.Parent = part2
+		BeamClone.Attachment0 = a0
+		BeamClone.Attachment1 = a1
+		table.insert(currentBeamStuff, BeamClone)
+		table.insert(currentBeamStuff, a0)
+		table.insert(currentBeamStuff, a1)
+	end)
+	HideBeam.OnClientEvent:Connect(function()
+		for _, v in currentBeamStuff do
+			v:Destroy()
+		end
+	end)
+
+	Button(TutorialFrame.close, function()
+		TweenService:Create(TutorialFrame.UIScale, TweenInfo.new(0.3), { Scale = 0 }):Play()
+		task.wait(0.3)
+		TutorialFrame.Visible = false
 	end)
 end
 
