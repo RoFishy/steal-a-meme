@@ -14,12 +14,12 @@ local EditPrompt = Remotes.EditPrompt
 local PromptHandler = {}
 
 function PromptHandler:Start()
-	TogglePrompt.OnClientEvent:Connect(function(Prompt: ProximityPrompt)
-		Prompt.Enabled = not Prompt.Enabled
+	TogglePrompt.OnClientEvent:Connect(function(Prompt: ProximityPrompt, Value: boolean)
+		Prompt.Enabled = Value
 	end)
 	EditPrompt.OnClientEvent:Connect(
 		function(Prompt: ProximityPrompt, ActionText: string, ObjectText: string, IgnorePlayer: Player)
-			if IgnorePlayer == LocalPlayer then
+			if IgnorePlayer and IgnorePlayer == LocalPlayer then
 				return
 			end
 

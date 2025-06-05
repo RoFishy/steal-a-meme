@@ -1,5 +1,6 @@
 -- // Services
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- // managers
 local BaseManager = require(script.Parent.BaseManager)
@@ -8,6 +9,10 @@ local BaseManager = require(script.Parent.BaseManager)
 local Utils = script.Parent.Parent.Utils
 local DataUtil = require(Utils.DataUtil)
 local Signals = require(Utils.Signals)
+
+-- // Packages
+local Packages = ReplicatedStorage.Packages
+local Replica = require(Packages.Replica)
 
 -- // Module
 local PlayerManager = {}
@@ -25,6 +30,9 @@ function PlayerManager:Start()
 			BaseManager:ResetBase(Base)
 		end
 		DataUtil:CleanupProfile(Player)
+	end)
+	Replica.NewReadyPlayer:Connect(function(Player: Player)
+		DataUtil:SetupReplica(Player)
 	end)
 	Signals.IncrementCash:Connect(function(Player: Player, Cash: number)
 		DataUtil:IncrementCash(Player, Cash)

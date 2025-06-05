@@ -14,6 +14,13 @@ local ProfileStore = require(script.ProfileStore)
 local Services = script.Parent.Parent.Services
 local BaseManager = require(Services.BaseManager)
 
+-- // Packages
+local Packages = ReplicatedStorage.Packages
+local Replica = require(Packages.Replica)
+
+-- // Remotes
+local Remotes = ReplicatedStorage.Remotes
+
 -- // Utils
 local Utils = script.Parent
 local Meme = require(Utils.Meme)
@@ -21,8 +28,12 @@ local Meme = require(Utils.Meme)
 -- // Store
 local PlayerStore = ProfileStore.New("PlayerStore", DataTemplate)
 
+-- // Const
+local DATA_TOKEN = Replica.Token("PlayerData")
+
 -- // Var
 local Profiles = {} :: { [Player]: typeof(ProfileStore:StartSessionAsync()) }
+local Replicas = {}
 
 -- // Module
 local DataUtil = {}
@@ -53,6 +64,23 @@ function DataUtil.new(Player: Player)
 	else
 		Player:Kick(`Profile load fail - Please Rejoin`)
 	end
+end
+
+function DataUtil:SetupReplica(Player: Player)
+	local Profile = Profiles[Player]
+	if Player:IsDescendantOf(Players) and not Profile then
+		repeat
+			task.wait()
+		until Profiles[Player]
+		Profile = Profiles[Player]
+	end
+	local _replica = Replica.New({
+		Token = DATA_TOKEN,
+		Data = Profile.Data,
+	})
+	Replicas[Player] = _replica
+	_replica:Subscribe(Player)
+	_replica:Set({ "Index" }, Profile.Data.Index)
 end
 
 function DataUtil:_SetupLeaderstats(Player: Player)
@@ -94,6 +122,16 @@ function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
 			Rarity = MemeObj.Rarity,
 			Stand = MemeObj.CurrentStand.Name,
 		}
+		if not table.find(Profile.Data.Index, MemeObj.Name) then
+			local _replica = Replicas[Player]
+			table.insert(Profile.Data.Index, MemeObj.Name)
+			_replica:Set({ "Index" }, Profile.Data.Index)
+			Remotes.ShowNotification:FireClient(
+				Player,
+				"You have discovered the " .. MemeObj.Name .. " Meme! It has been added to your Index.",
+				Color3.fromRGB(0, 217, 255)
+			)
+		end
 	end
 end
 
@@ -106,15 +144,17 @@ function DataUtil:LoadMemes(Player: Player)
 		local Slots = Profile.Data.Slots
 		for ID, Slot in Slots do
 			local OpenSlot = PlayerBase.Slots:FindFirstChild(Slot.Stand) or Meme:GetOpenSlot(PlayerBase.Slots)
+			if OpenSlot:GetAttribute("Meme") then
+				OpenSlot = Meme:GetOpenSlot(PlayerBase.Slots)
+			end
+			OpenSlot:SetAttribute("Meme", Slot.Name)
 			local _meme = Meme.new(Slot.Name, "", CFrame.new(0, 0, 0), Slot)
 			_meme.Model:SetAttribute("ID", ID)
 			_meme.PurchasePlayer = Player
 			_meme.CurrentStand = OpenSlot
 			task.cancel(_meme.CurrentMove)
-			task.spawn(function()
-				local offlineEarnings = self:CalculateOfflineEarnings(Player, _meme)
-				_meme:AddToSlot(OpenSlot, false, offlineEarnings)
-			end)
+			local offlineEarnings = self:CalculateOfflineEarnings(Player, _meme)
+			_meme:AddToSlot(OpenSlot, true, offlineEarnings)
 		end
 	end
 end

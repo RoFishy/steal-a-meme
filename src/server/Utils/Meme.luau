@@ -14,6 +14,8 @@ local ZonePlus = require(Packages.ZonePlus)
 local Remotes = ReplicatedStorage.Remotes
 local TogglePrompt = Remotes.TogglePrompt
 local EditPrompt = Remotes.EditPrompt
+local ShowNotification = Remotes.ShowNotification
+local SmackPlayer = Remotes.SmackPlayer
 
 -- // Utils
 local Utils = script.Parent
@@ -102,10 +104,12 @@ end
 
 function Meme:GetOpenSlot(Slots: Folder)
 	for _, Slot in Slots:GetChildren() do
-		if Slot:GetAttribute("Meme") == nil then
-			return Slot
+		if Slot:GetAttribute("Meme") then
+			continue
 		end
+		return Slot
 	end
+	return nil
 end
 
 function Meme:GetNewPrompt()
@@ -118,9 +122,15 @@ function Meme:GetNewPrompt()
 end
 
 function Meme:Steal(StealPlayer: Player)
+	ShowNotification:FireClient(
+		self.PurchasePlayer,
+		`{StealPlayer.Name} is stealing your {self.Name}!`,
+		Color3.fromRGB(255, 0, 0)
+	)
 	Signal.RemoveMemeFromPlayer:Fire(self.PurchasePlayer, self)
+	local originalPlayer = self.PurchasePlayer
 	self:Cleanup()
-	TogglePrompt:FireAllClients(self.Prompt)
+	TogglePrompt:FireAllClients(self.Prompt, false)
 
 	for _, Part: BasePart in self.Model:GetChildren() do
 		if not Part:IsA("BasePart") then
@@ -149,32 +159,59 @@ function Meme:Steal(StealPlayer: Player)
 	local BaseCollectZone = BaseComponents.CollectZone.CollectPart
 
 	local CollectZone = ZonePlus.new(BaseCollectZone)
-	CollectZone.playerEntered:Connect(function(Player: Player)
-		local Slots = StealPlayerBase.Slots
-		local OpenSlot = self:GetOpenSlot(Slots)
+	table.insert(
+		self.Connections,
+		SmackPlayer.Event:Connect(function(_: Player, OtherPlayer: Player)
+			if OtherPlayer == StealPlayer then
+				self.PurchasePlayer = originalPlayer
 
-		if not OpenSlot then
-			return
-		end
-
-		OpenSlot:SetAttribute("Meme", self.Name)
-
-		if Player == StealPlayer then
-			self.PurchasePlayer = StealPlayer
-			self.CurrentStand = OpenSlot
-			Weld:Destroy()
-			for _, Part: BasePart in self.Model:GetChildren() do
-				if not Part:IsA("BasePart") then
-					continue
+				local PurchasePlayerBase = BasesFolder[BaseManager:GetBaseNameFromPlayer(self.PurchasePlayer)]
+				local Slots = PurchasePlayerBase.Slots
+				local OpenSlot = self:GetOpenSlot(Slots)
+				self.CurrentStand = OpenSlot
+				Weld:Destroy()
+				for _, Part: BasePart in self.Model:GetChildren() do
+					if not Part:IsA("BasePart") then
+						continue
+					end
+					Part.CanCollide = true
 				end
-				Part.CanCollide = true
+				TogglePrompt:FireAllClients(self.Prompt, true)
+				self:AddToSlot(OpenSlot)
 			end
-			self:AddToSlot(OpenSlot)
-		end
-	end)
+		end)
+	)
+
+	table.insert(
+		self.Connections,
+		CollectZone.playerEntered:Connect(function(Player: Player)
+			if Player == StealPlayer then
+				local Slots = StealPlayerBase.Slots
+				local OpenSlot = self:GetOpenSlot(Slots)
+
+				if not OpenSlot then
+					return
+				end
+
+				self.PurchasePlayer = StealPlayer
+				self.CurrentStand = OpenSlot
+				Weld:Destroy()
+				for _, Part: BasePart in self.Model:GetChildren() do
+					if not Part:IsA("BasePart") then
+						continue
+					end
+					Part.CanCollide = true
+				end
+				self:AddToSlot(OpenSlot)
+				TogglePrompt:FireAllClients(self.Prompt, true)
+			end
+		end)
+	)
 end
 
-function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?)
+function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?, value: boolean?)
+	self.CurrentStand = Slot
+
 	Slot:SetAttribute("Meme", self.Name)
 	if LoadData == nil then
 		Signal.AddMemeToPlayer:Fire(self.PurchasePlayer, self)
@@ -195,12 +232,18 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?)
 	end
 
 	local SellPrice = math.ceil(self.Info.Price * 0.5)
-	if LoadData == nil then
-		TogglePrompt:FireClient(self.PurchasePlayer, self.Prompt)
+	if LoadData == nil and value == nil then
+		TogglePrompt:FireClient(self.PurchasePlayer, self.Prompt, true)
 	end
-	self.Prompt.ObjectText = `Sell ${self.Name} for ${SellPrice}`
-	self.Prompt.ActionText = "Sell"
-	EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name, self.PurchasePlayer)
+	self.Prompt.ObjectText = self.Name
+	self.Prompt.ActionText = "Steal"
+	if LoadData then
+		task.delay(5, function()
+			EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+		end)
+	else
+		EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+	end
 
 	local CollectButton: Part = Slot.Collect
 
@@ -273,7 +316,7 @@ function Meme:SetupConnections()
 
 			if Cash >= self.Info.Price then
 				Signal.IncrementCash:Fire(Player, -self.Info.Price)
-				TogglePrompt:FireClient(Player, ProximityPrompt)
+				TogglePrompt:FireClient(Player, ProximityPrompt, false)
 
 				local Slots = PlayerBase.Slots
 				local OpenSlot = self:GetOpenSlot(Slots)
@@ -327,14 +370,23 @@ function Meme:MoveTo(Position: Vector3)
 	end
 end
 
+function Meme:CleanupConnects()
+	pcall(function()
+		for _, Connection in self.Connections do
+			Connection:Disconnect()
+			table.remove(self.Connections, table.find(self.Connections, Connection))
+		end
+		for _, Thread in self.Threads do
+			task.cancel(Thread)
+			table.remove(self.Threads, table.find(self.Threads, Thread))
+		end
+	end)
+end
+
 function Meme:Cleanup()
-	for _, Connection in self.Connections do
-		Connection:Disconnect()
-	end
-	for _, Thread in self.Threads do
-		task.cancel(Thread)
-	end
+	self:CleanupConnects()
 	task.cancel(self.CurrentMove)
+	print(self.CurrentStand)
 	if self.PurchasePlayer then
 		self.PurchasePlayer = nil
 		self.CurrentStand:SetAttribute("Meme", nil)

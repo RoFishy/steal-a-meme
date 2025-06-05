@@ -7,6 +7,10 @@ local HttpService = game:GetService("HttpService")
 local Modules = ReplicatedStorage.Modules
 local Spawns = require(Modules.Spawns)
 
+-- // Remotes
+local Remotes = ReplicatedStorage.Remotes
+local ShowNotification = Remotes.ShowNotification
+
 -- // Utils
 local Utils = script.Parent.Parent.Utils
 local Meme = require(Utils.Meme)
@@ -18,7 +22,7 @@ local StartPart = ConveyorSystem.Spawn
 local EndPart = ConveyorSystem.End
 
 -- // Const
-local SPAWN_INTERVAL = 2
+local SPAWN_INTERVAL = 3
 
 -- // Variables
 local CurrentMemes = {}
@@ -53,6 +57,14 @@ end
 -- // Init
 local SpawnManager = {}
 
+function SpawnManager.Init()
+	SpawnManager.Sum = 0
+
+	for _, v in pairs(Spawns) do
+		SpawnManager.Sum += v.Rarity
+	end
+end
+
 function SpawnManager:Start()
 	EndPart.Touched:Connect(function(Hit)
 		if not Hit.Parent then
@@ -75,25 +87,21 @@ function SpawnManager:Start()
 		CurrentMemes[ModelId] =
 			Meme.new(GetNameFromValue(Spawns[Rarity]["Spawns"], RandomSpawn), Rarity, StartPart.CFrame)
 		CurrentMemes[ModelId].Model:SetAttribute("ID", ModelId)
+
+		if Rarity == "Mythical" or Rarity == "Omega" or Rarity == "SECRET???" then
+			ShowNotification:FireAllClients(`A {Rarity} Meme has spawned!`, Color3.fromRGB(255, 230, 0))
+		end
 	end
 end
 
 function SpawnManager:GetRandomRarity()
-	local RandomNumber = math.random(1, 1000)
-	if RandomNumber >= 500 then
-		return "Common"
-	elseif RandomNumber >= 300 then
-		return "Rare"
-	elseif RandomNumber >= 100 then
-		return "Epic"
-	elseif RandomNumber >= 50 then
-		return "Legendary"
-	elseif RandomNumber >= 30 then
-		return "Mythical"
-	elseif RandomNumber >= 15 then
-		return "Omega"
-	else
-		return "SECRET???"
+	local RandomNumber = math.random(self.Sum)
+	for Name, Value in pairs(Spawns) do
+		if RandomNumber <= Value.Rarity then
+			return Name
+		else
+			RandomNumber -= Value.Rarity
+		end
 	end
 end
 

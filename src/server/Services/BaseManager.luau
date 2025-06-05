@@ -11,6 +11,7 @@ local Products = require(Modules.Products)
 -- // Remotes
 local Remotes = ReplicatedStorage.Remotes
 local SetupBaseDisplay = Remotes.SetupBaseDisplay
+local ShowNotification = Remotes.ShowNotification
 
 -- // Utils
 local Utils = script.Parent.Parent.Utils
@@ -18,6 +19,7 @@ local Signals = require(Utils.Signals)
 
 -- // Objects
 local BasesFolder = workspace.Bases
+local Floor = workspace.Floor
 
 -- // Constants
 local LOCK_TIME = 60
@@ -31,6 +33,10 @@ function BaseManager.Init()
 	-- // Meme init
 	PhysicsService:RegisterCollisionGroup("Meme")
 	PhysicsService:CollisionGroupSetCollidable("Meme", "Meme", false)
+	PhysicsService:RegisterCollisionGroup("Floor")
+	PhysicsService:CollisionGroupSetCollidable("Meme", "Default", false)
+	PhysicsService:CollisionGroupSetCollidable("Meme", "Floor", true)
+	Floor.CollisionGroup = "Floor"
 
 	-- // Init bases
 	BaseManager.Bases = {}
@@ -53,6 +59,11 @@ function BaseManager.Init()
 		for _, LockPart: BasePart in Base.Components.Lock:GetDescendants() do
 			if LockPart:IsA("BasePart") then
 				LockPart.CollisionGroup = "Locks - " .. Base.Name
+			end
+		end
+		for _, Slot: BasePart in Base.Slots:GetDescendants() do
+			if Slot:IsA("BasePart") then
+				Slot.CollisionGroup = "Floor"
 			end
 		end
 	end
@@ -83,6 +94,11 @@ function BaseManager:Start()
 						return MarketplaceService:PromptProductPurchase(Player, BYPASS_COOLDOWN_PRODUCT)
 					end
 					self:LockBase(Base.Name)
+					ShowNotification:FireClient(
+						Player,
+						`You have locked your base for {LOCK_TIME} seconds!`,
+						Color3.fromRGB(0, 255, 0)
+					)
 				end
 			end
 		end)

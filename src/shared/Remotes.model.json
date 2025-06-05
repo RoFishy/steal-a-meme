@@ -12,6 +12,14 @@
         {
             "Name": "EditPrompt",
             "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "ShowNotification",
+            "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "SmackPlayer",
+            "ClassName": "BindableEvent"
         }
     ]
 }
