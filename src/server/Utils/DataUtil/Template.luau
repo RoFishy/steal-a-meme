@@ -5,8 +5,9 @@ local Modules = ReplicatedStorage.Modules
 local Types = require(Modules.Types)
 
 local DataTemplate: Types.UserData = {
-	Cash = 500,
+	Cash = 250,
 	Slots = {},
+	LastJoin = nil,
 }
 
 return DataTemplate

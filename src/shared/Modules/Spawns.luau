@@ -29,26 +29,112 @@ return {
 	},
 	["Rare"] = {
 		Rarity = 30,
-		Spawns = {},
+		Spawns = {
+			["Rick Roll"] = {
+				Price = 1000,
+				Income = 10,
+			},
+			["Giga Chad"] = {
+				Price = 1500,
+				Income = 15,
+			},
+			["Pepe"] = {
+				Price = 2500,
+				Income = 25,
+			},
+			["Sad Spongebob"] = {
+				Price = 5000,
+				Income = 50,
+			},
+			["The Rock"] = {
+				Price = 7500,
+				Income = 75,
+			},
+		},
 	},
 	["Epic"] = {
 		Rarity = 10,
-		Spawns = {},
+		Spawns = {
+			["Floppa"] = {
+				Price = 12500,
+				Income = 125,
+			},
+			["Nyan Cat"] = {
+				Price = 15000,
+				Income = 150,
+			},
+			["Sigma"] = {
+				Price = 25000,
+				Income = 250,
+			},
+			["Capybara"] = {
+				Price = 45000,
+				Income = 450,
+			},
+		},
 	},
 	["Legendary"] = {
 		Rarity = 5,
-		Spawns = {},
+		Spawns = {
+			["John Pork"] = {
+				Price = 120000,
+				Income = 1200,
+			},
+			["Walter"] = {
+				Price = 215000,
+				Income = 2150,
+			},
+			["Smurf Cat"] = {
+				Price = 300000,
+				Income = 3000,
+			},
+			["El Gato"] = {
+				Price = 375000,
+				Income = 3750,
+			},
+		},
 	},
 	["Mythical"] = {
 		Rarity = 3,
-		Spawns = {},
+		Spawns = {
+			["Tim Cheese"] = {
+				Price = 700000,
+				Income = 5000,
+			},
+			["Sprunki"] = {
+				Price = 1000000,
+				Income = 7500,
+			},
+			["Hampter"] = {
+				Price = 1750000,
+				Income = 12500,
+			},
+		},
 	},
 	["Omega"] = {
 		Rarity = 1.5,
-		Spawns = {},
+		Spawns = {
+			["Turi ip ip ip"] = {
+				Price = 3000000,
+				Income = 20000,
+			},
+			["Gegagedigedagedago"] = {
+				Price = 5000000,
+				Income = 35000,
+			},
+			["Tung Tung"] = {
+				Price = 10000000,
+				Income = 80000,
+			},
+		},
 	},
 	["SECRET???"] = {
 		Rarity = 0.5,
-		Spawns = {},
+		Spawns = {
+			["Chicken Jockey"] = {
+				Price = 99000000,
+				Income = 200000,
+			},
+		},
 	},
 } :: { [string]: Types.Spawn }

@@ -30,6 +30,7 @@ local BaseManager = {}
 function BaseManager.Init()
 	-- // Meme init
 	PhysicsService:RegisterCollisionGroup("Meme")
+	PhysicsService:CollisionGroupSetCollidable("Meme", "Meme", false)
 
 	-- // Init bases
 	BaseManager.Bases = {}

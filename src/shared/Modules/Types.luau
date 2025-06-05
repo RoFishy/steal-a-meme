@@ -1,6 +1,7 @@
 export type UserData = {
 	Cash: number,
 	Slots: { [number]: string },
+	LastJoin: number?,
 }
 
 export type MemeSpawn = {

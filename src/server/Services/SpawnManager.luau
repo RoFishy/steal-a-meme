@@ -1,6 +1,7 @@
 -- // Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
 
 -- // Modules
 local Modules = ReplicatedStorage.Modules
@@ -17,7 +18,10 @@ local StartPart = ConveyorSystem.Spawn
 local EndPart = ConveyorSystem.End
 
 -- // Const
-local SPAWN_INTERVAL = 1
+local SPAWN_INTERVAL = 2
+
+-- // Variables
+local CurrentMemes = {}
 
 -- // local function
 local function IndexDictionary(Dictionary, Index)
@@ -55,17 +59,22 @@ function SpawnManager:Start()
 			return
 		end
 		if Hit.Parent:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(Hit.Parent) then
-			Hit.Parent:Destroy()
+			local Id = Hit.Parent:GetAttribute("ID")
+			CurrentMemes[Id]:Destroy()
+			CurrentMemes[Id] = nil
 		end
 	end)
 
 	while task.wait(SPAWN_INTERVAL) do
-		--local rarity = self:GetRandomRarity()
-		local Rarity = "Common"
+		local Rarity = self:GetRandomRarity()
+		--local Rarity = "Common"
 		local RandomSpawn =
 			IndexDictionary(Spawns[Rarity]["Spawns"], math.random(1, GetDictionaryLength(Spawns[Rarity]["Spawns"])))
 
-		Meme.new(GetNameFromValue(Spawns[Rarity]["Spawns"], RandomSpawn), Rarity, StartPart.CFrame)
+		local ModelId = HttpService:GenerateGUID(false)
+		CurrentMemes[ModelId] =
+			Meme.new(GetNameFromValue(Spawns[Rarity]["Spawns"], RandomSpawn), Rarity, StartPart.CFrame)
+		CurrentMemes[ModelId].Model:SetAttribute("ID", ModelId)
 	end
 end
 
@@ -80,7 +89,7 @@ function SpawnManager:GetRandomRarity()
 	elseif RandomNumber >= 50 then
 		return "Legendary"
 	elseif RandomNumber >= 30 then
-		return "Mythic"
+		return "Mythical"
 	elseif RandomNumber >= 15 then
 		return "Omega"
 	else

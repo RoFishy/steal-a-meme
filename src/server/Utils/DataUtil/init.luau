@@ -10,6 +10,14 @@ local Types = require(Modules.Types)
 local DataTemplate = require(script.Template)
 local ProfileStore = require(script.ProfileStore)
 
+-- // Managers
+local Services = script.Parent.Parent.Services
+local BaseManager = require(Services.BaseManager)
+
+-- // Utils
+local Utils = script.Parent
+local Meme = require(Utils.Meme)
+
 -- // Store
 local PlayerStore = ProfileStore.New("PlayerStore", DataTemplate)
 
@@ -37,8 +45,8 @@ function DataUtil.new(Player: Player)
 
 		if Player.Parent == Players then
 			Profiles[Player] = Profile
-			Profile.Data.Cash += 5000
 			DataUtil:_SetupLeaderstats(Player)
+			DataUtil:LoadMemes(Player)
 		else
 			Profile:EndSession()
 		end
@@ -77,6 +85,61 @@ function DataUtil:IncrementCash(Player: Player, Amount: number)
 	end
 end
 
+function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.Slots[MemeObj.Model:GetAttribute("ID")] = {
+			Name = MemeObj.Name,
+			Info = MemeObj.Info,
+			Rarity = MemeObj.Rarity,
+			Stand = MemeObj.CurrentStand.Name,
+		}
+	end
+end
+
+function DataUtil:LoadMemes(Player: Player)
+	local Profile = Profiles[Player]
+	if Profile then
+		local PlayerBase = BaseManager:GetBaseNameFromPlayer(Player)
+		PlayerBase = workspace.Bases:FindFirstChild(PlayerBase)
+
+		local Slots = Profile.Data.Slots
+		for ID, Slot in Slots do
+			local OpenSlot = PlayerBase.Slots:FindFirstChild(Slot.Stand) or Meme:GetOpenSlot(PlayerBase.Slots)
+			local _meme = Meme.new(Slot.Name, "", CFrame.new(0, 0, 0), Slot)
+			_meme.Model:SetAttribute("ID", ID)
+			_meme.PurchasePlayer = Player
+			_meme.CurrentStand = OpenSlot
+			task.cancel(_meme.CurrentMove)
+			task.spawn(function()
+				local offlineEarnings = self:CalculateOfflineEarnings(Player, _meme)
+				_meme:AddToSlot(OpenSlot, false, offlineEarnings)
+			end)
+		end
+	end
+end
+
+function DataUtil:CalculateOfflineEarnings(Player: Player, MemeObj): number?
+	local Profile = Profiles[Player]
+	if Profile then
+		local LastJoin = Profile.Data.LastJoin
+		if LastJoin then
+			local Time = tick() - LastJoin
+			local Income = MemeObj.Info.Income * Time
+
+			return Income
+		end
+	end
+	return nil
+end
+
+function DataUtil:RemoveMemeFromPlayer(Player: Player, MemeObj)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.Slots[MemeObj.Model:GetAttribute("ID")] = nil
+	end
+end
+
 function DataUtil:GetData(Player: Player): Types.UserData
 	if self:IsProfileLoaded(Player) then
 		return Profiles[Player].Data
@@ -87,6 +150,7 @@ end
 
 function DataUtil:CleanupProfile(Player: Player)
 	if Profiles[Player] then
+		Profiles[Player].Data.LastJoin = tick()
 		Profiles[Player]:EndSession()
 	end
 end

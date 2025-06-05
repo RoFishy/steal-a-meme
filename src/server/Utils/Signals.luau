@@ -7,4 +7,7 @@ local Signal = require(Packages.Signal)
 
 return {
 	BypassLockCooldown = Signal.new(),
+	AddMemeToPlayer = Signal.new(),
+	RemoveMemeFromPlayer = Signal.new(),
+	IncrementCash = Signal.new(),
 }

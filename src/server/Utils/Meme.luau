@@ -17,7 +17,7 @@ local EditPrompt = Remotes.EditPrompt
 
 -- // Utils
 local Utils = script.Parent
-local DataUtil = require(Utils.DataUtil)
+local Signal = require(Utils.Signals)
 
 -- // Managers
 local BaseManager = require(script.Parent.Parent.Services.BaseManager)
@@ -39,21 +39,26 @@ local function FormatNumber(n)
 	end
 	local d = math.floor(math.log10(n) / 3) * 3
 	local s = tostring(n / (10 ^ d)):sub(1, 5)
-	return s .. " " .. tostring(NUMBER_SUFFIX[math.floor(d / 3)])
+	return s .. tostring(NUMBER_SUFFIX[math.floor(d / 3)])
 end
 
 -- // Init
 local Meme = {}
 Meme.__index = Meme
 
-function Meme.new(Name: string, Type: string, SpawnLocation: CFrame)
+function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo: {}?)
+	local MemeInfo
+	if CustomInfo then
+		Type = CustomInfo.Rarity
+		MemeInfo = CustomInfo.Info
+	else
+		MemeInfo = Spawns[Type]["Spawns"][Name]
+	end
 	local RarityFolder = SpawnsFolder:FindFirstChild(Type)
 	assert(RarityFolder, "Rarity folder not found")
 
 	local MemeModel = RarityFolder:FindFirstChild(Name)
-	assert(Meme, "Meme not found")
-
-	local MemeInfo = Spawns[Type]["Spawns"][Name]
+	assert(MemeModel, `Meme {Name} not found in {Type} folder`)
 
 	local self = setmetatable({}, Meme)
 	self.Model = MemeModel:Clone()
@@ -66,12 +71,13 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame)
 	self.CurrentStand = nil
 	self.Prompt = nil
 	self.CurrentMove = nil
+	self.Rarity = Type
 
 	if not self.Model.PrimaryPart then
 		self.Model.PrimaryPart = self.Model.HumanoidRootPart
 	end
 
-	self.Model.Humanoid.WalkSpeed = 12
+	self.Model.Humanoid.WalkSpeed = 6
 
 	self:SetCollisionGroup("Meme")
 
@@ -112,6 +118,7 @@ function Meme:GetNewPrompt()
 end
 
 function Meme:Steal(StealPlayer: Player)
+	Signal.RemoveMemeFromPlayer:Fire(self.PurchasePlayer, self)
 	self:Cleanup()
 	TogglePrompt:FireAllClients(self.Prompt)
 
@@ -167,7 +174,11 @@ function Meme:Steal(StealPlayer: Player)
 	end)
 end
 
-function Meme:AddToSlot(Slot: Model)
+function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?)
+	Slot:SetAttribute("Meme", self.Name)
+	if LoadData == nil then
+		Signal.AddMemeToPlayer:Fire(self.PurchasePlayer, self)
+	end
 	self.Model:PivotTo((Slot.Stand.CFrame + Vector3.new(0, 5, 0)) * CFrame.fromEulerAngles(0, math.rad(-90), 0))
 
 	task.delay(1, function()
@@ -184,21 +195,30 @@ function Meme:AddToSlot(Slot: Model)
 	end
 
 	local SellPrice = math.ceil(self.Info.Price * 0.5)
-
-	TogglePrompt:FireClient(self.PurchasePlayer, self.Prompt)
+	if LoadData == nil then
+		TogglePrompt:FireClient(self.PurchasePlayer, self.Prompt)
+	end
 	self.Prompt.ObjectText = `Sell ${self.Name} for ${SellPrice}`
 	self.Prompt.ActionText = "Sell"
 	EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name, self.PurchasePlayer)
 
 	local CollectButton: Part = Slot.Collect
+
+	if OfflineIncome then
+		self.CurrentEarned += OfflineIncome
+		local OfflineAttachment = CollectButton.OfflineAttachment
+		OfflineAttachment.Billboard.Frame.offline.Text = `Offline Cash: ${FormatNumber(OfflineIncome)}`
+	end
+
 	table.insert(
 		self.Connections,
 		CollectButton.Touched:Connect(function(Hit: Part)
 			local Player = Players:GetPlayerFromCharacter(Hit.Parent)
 			if Player and Player == self.PurchasePlayer then
-				DataUtil:IncrementCash(Player, self.CurrentEarned)
+				Signal.IncrementCash:Fire(Player, self.CurrentEarned)
 				self.CurrentEarned = 0
 				CollectButton.Attachment.Billboard.Frame.amount.Text = `${FormatNumber(self.CurrentEarned)}`
+				CollectButton.OfflineAttachment.Billboard.Frame.offline.Text = `Offline Cash: $0`
 			end
 		end)
 	)
@@ -216,12 +236,14 @@ function Meme:AddToSlot(Slot: Model)
 		self.Connections,
 		self.Prompt.Triggered:Connect(function(Player: Player)
 			if Player == self.PurchasePlayer then
-				DataUtil:IncrementCash(Player, SellPrice)
+				Signal.IncrementCash:Fire(Player, SellPrice)
+				Signal.RemoveMemeFromPlayer:Fire(self.PurchasePlayer, self)
 				self:Destroy()
 			else
 				self:Steal(Player)
 			end
 			CollectButton.Attachment.Billboard.Frame.amount.Text = `$0`
+			CollectButton.OfflineAttachment.Billboard.Frame.offline.Text = `Offline Cash: $0`
 		end)
 	)
 end
@@ -240,8 +262,7 @@ function Meme:SetupConnections()
 			if self.PurchasePlayer then
 				humConnection:Disconnect()
 			end
-			local Profile = DataUtil:GetData(Player)
-			local Cash = Profile.Cash
+			local Cash = Player.leaderstats.Cash.Value
 
 			local PlayerBase = BaseManager:GetBaseNameFromPlayer(Player)
 			PlayerBase = BasesFolder[PlayerBase]
@@ -251,15 +272,14 @@ function Meme:SetupConnections()
 			end
 
 			if Cash >= self.Info.Price then
-				DataUtil:IncrementCash(Player, -self.Info.Price)
+				Signal.IncrementCash:Fire(Player, -self.Info.Price)
 				TogglePrompt:FireClient(Player, ProximityPrompt)
 
-				self:SetCollisionGroup("Meme")
 				local Slots = PlayerBase.Slots
 				local OpenSlot = self:GetOpenSlot(Slots)
 
 				OpenSlot:SetAttribute("Meme", self.Name)
-
+				self.Model.Humanoid.WalkSpeed = 10
 				self:MoveTo(PlayerBase.Components.CollectZone.CollectPart.Position)
 				self.PurchasePlayer = Player
 
@@ -281,8 +301,8 @@ function Meme:SetupDisplayInfo()
 	local DisplayAttachment = self.Model.HumanoidRootPart.Attachment
 	local MainFrame = DisplayAttachment.Billboard.Main
 
-	MainFrame.Money.Text = `${Income}/s`
-	MainFrame.Price.Text = `${Price}`
+	MainFrame.Money.Text = `${FormatNumber(Income)}/s`
+	MainFrame.Price.Text = `${FormatNumber(Price)}`
 	MainFrame:FindFirstChild("Name").Text = self.Name
 end
 
@@ -299,7 +319,10 @@ function Meme:MoveTo(Position: Vector3)
 				task.wait()
 				Humanoid:MoveTo(Position)
 			until (self.Model.HumanoidRootPart.Position - Position).magnitude < 2
-			task.cancel(self.CurrentMove)
+			if self.CurrentMove then
+				coroutine.yield(self.CurrentMove)
+				coroutine.close(self.CurrentMove)
+			end
 		end)
 	end
 end
@@ -311,10 +334,13 @@ function Meme:Cleanup()
 	for _, Thread in self.Threads do
 		task.cancel(Thread)
 	end
-	self.PurchasePlayer = nil
-	self.CurrentStand:SetAttribute("Meme", nil)
-	self.CurrentStand = nil
-	self.CurrentEarned = 0
+	task.cancel(self.CurrentMove)
+	if self.PurchasePlayer then
+		self.PurchasePlayer = nil
+		self.CurrentStand:SetAttribute("Meme", nil)
+		self.CurrentStand = nil
+		self.CurrentEarned = 0
+	end
 end
 
 function Meme:Destroy()
