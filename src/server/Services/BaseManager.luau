@@ -28,6 +28,9 @@ local BYPASS_COOLDOWN_PRODUCT = Products.BypassLockCooldown.ProductId
 local BaseManager = {}
 
 function BaseManager.Init()
+	-- // Meme init
+	PhysicsService:RegisterCollisionGroup("Meme")
+
 	-- // Init bases
 	BaseManager.Bases = {}
 	for _, Base in BasesFolder:GetChildren() do
@@ -43,6 +46,8 @@ function BaseManager.Init()
 		PhysicsService:RegisterCollisionGroup("Owner - " .. Base.Name)
 
 		PhysicsService:CollisionGroupSetCollidable("Locks - " .. Base.Name, "Owner - " .. Base.Name, false)
+		PhysicsService:CollisionGroupSetCollidable("Meme", "Locks - " .. Base.Name, false)
+		PhysicsService:CollisionGroupSetCollidable("Meme", "Owner - " .. Base.Name, false)
 
 		for _, LockPart: BasePart in Base.Components.Lock:GetDescendants() do
 			if LockPart:IsA("BasePart") then
@@ -200,6 +205,11 @@ end
 function BaseManager:ResetBase(Base: string)
 	self.Bases[Base].Owner = nil
 	Base = BasesFolder[Base]
+	local Components = Base.Components
+	local Sign = Components.Sign
+	local SignGui = Sign.Main.Sign.SurfaceGui
+
+	SignGui:FindFirstChildOfClass("TextLabel").Text = `Unclaimed Base`
 end
 
 return BaseManager

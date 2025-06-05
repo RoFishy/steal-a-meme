@@ -1,5 +1,5 @@
 export type UserData = {
-	Coins: number,
+	Cash: number,
 	Slots: { [number]: string },
 }
 

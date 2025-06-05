@@ -20,7 +20,7 @@ function BaseHandler:Start()
 		local Base = BasesFolder:FindFirstChild(BaseName)
 		if Base then
 			local Components = Base.Components
-			local Display = Components.Display
+			local Display = Components:WaitForChild("Display")
 			local MainDisplayGui = Display.Attachment.Billboard
 			MainDisplayGui.Enabled = true
 

@@ -4,6 +4,14 @@
         {
             "Name": "SetupBaseDisplay",
             "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "TogglePrompt",
+            "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "EditPrompt",
+            "ClassName": "RemoteEvent"
         }
     ]
 }

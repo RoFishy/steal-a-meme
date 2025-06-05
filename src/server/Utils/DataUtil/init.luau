@@ -37,6 +37,7 @@ function DataUtil.new(Player: Player)
 
 		if Player.Parent == Players then
 			Profiles[Player] = Profile
+			Profile.Data.Cash += 5000
 			DataUtil:_SetupLeaderstats(Player)
 		else
 			Profile:EndSession()
@@ -68,9 +69,17 @@ function DataUtil:IsProfileLoaded(Player: Player)
 	return false
 end
 
-function DataUtil:GetProfile(Player: Player): Types.UserData
+function DataUtil:IncrementCash(Player: Player, Amount: number)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.Cash += Amount
+		Player.leaderstats.Cash.Value = Profile.Data.Cash
+	end
+end
+
+function DataUtil:GetData(Player: Player): Types.UserData
 	if self:IsProfileLoaded(Player) then
-		return Profiles[Player]
+		return Profiles[Player].Data
 	else
 		return "Profile not loaded"
 	end
