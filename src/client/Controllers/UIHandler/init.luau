@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 
 -- // Player
 local LocalPlayer = Players.LocalPlayer
@@ -28,6 +29,14 @@ local HideTutorialFrame = Remotes.HideTutorialFrame
 local ShowBeam = Remotes.ShowBeam
 local HideBeam = Remotes.HideBeam
 
+-- // Types
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local Types = require(Modules.Types)
+
+-- // Utils
+local Utils = script.Parent.Utils
+local Signals = require(Utils.Signals)
+
 -- // Lighting
 local Blur = Lighting:WaitForChild("Blur")
 
@@ -51,17 +60,21 @@ local BlackFrame = MiscUI.Black
 local NotificationHolder = MiscUI.NotificationHolder
 local NotificationTemplate = NotificationHolder.NotificationTemplate
 
+local DialogueList = MiscUI:WaitForChild("DialogueList")
+local DialogueOptionTemplate = MiscUI:WaitForChild("DialogueOptionTemplate")
+
 local TutorialFrame = HUD.Tutorial
 
 -- // Utils
-local Utils = script.Utils
-local Button = require(Utils.Button)
+local UIUtils = script.Utils
+local Button = require(UIUtils.Button)
 
 local FrameModules = script.Frames
 
 -- // Constants
 local DEFAULT_FOV = 70
 local ZOOMED_IN_FOV = 50
+local MAX_RETRIES = 8
 
 -- // Vars
 local Debounce = false
@@ -80,6 +93,18 @@ local function FormatCash(Amount: number): string
 	return formatted
 end
 
+function coreCall(method, ...)
+	local result = {}
+	for _ = 1, MAX_RETRIES do
+		result = { pcall(StarterGui[method], StarterGui, ...) }
+		if result[1] then
+			break
+		end
+		RunService.Stepped:Wait()
+	end
+	return unpack(result)
+end
+
 -- // Init
 local UIHandler = {}
 
@@ -96,6 +121,13 @@ function UIHandler.Init()
 end
 
 function UIHandler:Start()
+	coreCall("SetCore", "ResetButtonCallback", false)
+
+	-- // signals
+	Signals.ToggleNPCDialogue:Connect(function(Options: Types.NPCDialogueOptions)
+		self:ToggleNPCDialogue(Options)
+	end)
+
 	-- // UI stroke stuff
 	self:SetupUIStrokes()
 	PlayerGui.DescendantAdded:Connect(function(Child)
@@ -123,6 +155,7 @@ function UIHandler:Start()
 
 	-- // Remotes
 	ShowNotification.OnClientEvent:Connect(function(Text: string, Color: Color3?)
+		Color = Color or Color3.fromRGB(255, 255, 255)
 		self:ShowNotification(Text, Color)
 	end)
 
@@ -164,16 +197,51 @@ function UIHandler:Start()
 	end)
 end
 
+function UIHandler:ToggleNPCDialogue(Options: Types.NPCDialogueOptions)
+	for Number, Option in Options do
+		local OptionFrame = DialogueOptionTemplate:Clone()
+		OptionFrame.Number.Text = "#" .. tostring(Number)
+		OptionFrame.Text.Text = Option.Option
+		OptionFrame.Visible = true
+		OptionFrame.Parent = DialogueList
+
+		Button(OptionFrame, function()
+			self:NPCDialogueHandler(Option)
+		end)
+
+		local UIScale = OptionFrame:WaitForChild("UIScale")
+		UIScale.Scale = 0
+		local Tween = TweenService:Create(UIScale, TweenInfo.new(0.2), { Scale = 1 })
+		Tween:Play()
+		Tween.Completed:Wait()
+	end
+end
+
+function UIHandler:NPCDialogueHandler(Option: Types.NPCDialogueOption)
+	for _, OptionFrame in DialogueList:GetChildren() do
+		if not OptionFrame:IsA("Frame") then
+			continue
+		end
+		OptionFrame:Destroy()
+	end
+	if Option.Callback then
+		Option.Callback()
+	end
+	TweenService:Create(Camera, TweenInfo.new(0.2), { FieldOfView = DEFAULT_FOV }):Play()
+	Signals.NPCInteractionEnded:Fire()
+end
+
 function UIHandler:ShowNotification(Text: string, Color: Color3?)
 	for _, Notification in NotificationHolder:GetChildren() do
 		if not Notification:IsA("TextLabel") then
 			continue
 		end
-		if Notification.Text == Text then
+		if Notification.Text == Text or string.find(Notification.Text, Text) then
 			local CurrentIndex = tonumber(Notification.Name)
 			CurrentIndex += 1
 			Notification.Text = `{Text} ({CurrentIndex})`
 			Notification.Name = tostring(CurrentIndex)
+			return
 		end
 	end
 
@@ -278,6 +346,7 @@ function UIHandler:CloseAllFrames()
 			Frame.Visible = false
 			Frame.Position = OriginalPosition
 			Debounce = false
+			Signals.ClosedFrame:Fire()
 			local FrameModule = FrameModules:FindFirstChild(Frame.Name)
 			if FrameModule then
 				FrameModule = require(FrameModule)

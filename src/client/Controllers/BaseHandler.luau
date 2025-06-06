@@ -8,6 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 -- // Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local SetupBaseDisplay = Remotes.SetupBaseDisplay
+local ToggleCollision = Remotes.ToggleCollision
 
 -- // Objects
 local BasesFolder = workspace:WaitForChild("Bases")
@@ -31,6 +32,10 @@ function BaseHandler:Start()
 			)
 			MainDisplayGui.Frame.ImageLabel.Image = Thumbnail
 		end
+	end)
+
+	ToggleCollision.OnClientEvent:Connect(function(Part: BasePart, CanCollide: boolean)
+		Part.CanCollide = CanCollide
 	end)
 end
 

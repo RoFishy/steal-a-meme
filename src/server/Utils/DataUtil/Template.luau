@@ -6,6 +6,8 @@ local Types = require(Modules.Types)
 
 local DataTemplate: Types.UserData = {
 	Cash = 250,
+	Rebirths = 0,
+	Steals = 0,
 	Slots = {},
 	LastJoin = nil,
 	Index = {},

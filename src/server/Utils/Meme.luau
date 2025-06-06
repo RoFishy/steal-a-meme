@@ -36,7 +36,7 @@ local function FormatNumber(n)
 	if not tonumber(n) then
 		return n
 	end
-	if n < 10000 then
+	if n < 1000 then
 		return math.floor(n)
 	end
 	local d = math.floor(math.log10(n) / 3) * 3
@@ -90,6 +90,10 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo:
 
 	self:SetupDisplayInfo()
 	self:SetupConnections()
+
+	self.Model.Destroying:Connect(function()
+		self:Destroy()
+	end)
 
 	return self
 end
@@ -186,6 +190,8 @@ function Meme:Steal(StealPlayer: Player)
 		self.Connections,
 		CollectZone.playerEntered:Connect(function(Player: Player)
 			if Player == StealPlayer then
+				local DataUtil = require(Utils.DataUtil)
+
 				local Slots = StealPlayerBase.Slots
 				local OpenSlot = self:GetOpenSlot(Slots)
 
@@ -203,6 +209,7 @@ function Meme:Steal(StealPlayer: Player)
 					Part.CanCollide = true
 				end
 				self:AddToSlot(OpenSlot)
+				DataUtil:IncrementSteals(StealPlayer, 1)
 				TogglePrompt:FireAllClients(self.Prompt, true)
 			end
 		end)
@@ -305,6 +312,7 @@ function Meme:SetupConnections()
 		ProximityPrompt.Triggered:Connect(function(Player: Player)
 			if self.PurchasePlayer then
 				humConnection:Disconnect()
+				self.CurrentStand:SetAttribute("Meme", nil)
 			end
 			local Cash = Player.leaderstats.Cash.Value
 
@@ -312,7 +320,7 @@ function Meme:SetupConnections()
 			PlayerBase = BasesFolder[PlayerBase]
 
 			if not self:GetOpenSlot(PlayerBase.Slots) then
-				return
+				ShowNotification:FireClient(Player, "You do not have any open slots!")
 			end
 
 			if Cash >= self.Info.Price then
@@ -321,18 +329,22 @@ function Meme:SetupConnections()
 
 				local Slots = PlayerBase.Slots
 				local OpenSlot = self:GetOpenSlot(Slots)
+				self.CurrentStand = OpenSlot
 
 				OpenSlot:SetAttribute("Meme", self.Name)
 				self.Model.Humanoid.WalkSpeed = 10
 				self:MoveTo(PlayerBase.Components.CollectZone.CollectPart.Position)
 				self.PurchasePlayer = Player
 
-				local Humanoid = self.Model.Humanoid :: Humanoid
-				humConnection = Humanoid.MoveToFinished:Connect(function()
-					task.cancel(self.CurrentMove)
-					self.CurrentStand = OpenSlot
-					self:AddToSlot(OpenSlot)
+				humConnection = PlayerBase.Components.CollectZone.CollectPart.Touched:Connect(function(Hit: Part)
+					if Hit.Parent == self.Model then
+						task.cancel(self.CurrentMove)
+						self.CurrentStand = OpenSlot
+						self:AddToSlot(OpenSlot)
+					end
 				end)
+			else
+				ShowNotification:FireClient(Player, "You do not have enough cash to purchase this meme!")
 			end
 		end)
 	)
@@ -362,7 +374,7 @@ function Meme:MoveTo(Position: Vector3)
 			repeat
 				task.wait()
 				Humanoid:MoveTo(Position)
-			until (self.Model.HumanoidRootPart.Position - Position).magnitude < 2
+			until (self.Model.HumanoidRootPart.Position - Position).magnitude < 5
 			if self.CurrentMove then
 				coroutine.yield(self.CurrentMove)
 				coroutine.close(self.CurrentMove)
@@ -387,7 +399,6 @@ end
 function Meme:Cleanup()
 	self:CleanupConnects()
 	task.cancel(self.CurrentMove)
-	print(self.CurrentStand)
 	if self.PurchasePlayer then
 		self.PurchasePlayer = nil
 		self.CurrentStand:SetAttribute("Meme", nil)

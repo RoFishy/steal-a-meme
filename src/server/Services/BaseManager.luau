@@ -12,6 +12,7 @@ local Products = require(Modules.Products)
 local Remotes = ReplicatedStorage.Remotes
 local SetupBaseDisplay = Remotes.SetupBaseDisplay
 local ShowNotification = Remotes.ShowNotification
+local ToggleCollision = Remotes.ToggleCollision
 
 -- // Utils
 local Utils = script.Parent.Parent.Utils
@@ -38,6 +39,9 @@ function BaseManager.Init()
 	PhysicsService:CollisionGroupSetCollidable("Meme", "Floor", true)
 	Floor.CollisionGroup = "Floor"
 
+	PhysicsService:RegisterCollisionGroup("Player")
+	PhysicsService:CollisionGroupSetCollidable("Meme", "Player", false)
+
 	-- // Init bases
 	BaseManager.Bases = {}
 	for _, Base in BasesFolder:GetChildren() do
@@ -49,18 +53,6 @@ function BaseManager.Init()
 		BaseManager:ResetBase(Base.Name)
 
 		-- // physics stuff
-		PhysicsService:RegisterCollisionGroup("Locks - " .. Base.Name)
-		PhysicsService:RegisterCollisionGroup("Owner - " .. Base.Name)
-
-		PhysicsService:CollisionGroupSetCollidable("Locks - " .. Base.Name, "Owner - " .. Base.Name, false)
-		PhysicsService:CollisionGroupSetCollidable("Meme", "Locks - " .. Base.Name, false)
-		PhysicsService:CollisionGroupSetCollidable("Meme", "Owner - " .. Base.Name, false)
-
-		for _, LockPart: BasePart in Base.Components.Lock:GetDescendants() do
-			if LockPart:IsA("BasePart") then
-				LockPart.CollisionGroup = "Locks - " .. Base.Name
-			end
-		end
 		for _, Slot: BasePart in Base.Slots:GetDescendants() do
 			if Slot:IsA("BasePart") then
 				Slot.CollisionGroup = "Floor"
@@ -131,9 +123,11 @@ function BaseManager:LockBase(Base: string)
 		self:UnlockBase(Base.Name)
 	end)
 
+	Locks.Wall.CanCollide = true
+	ToggleCollision:FireClient(self.Bases[Base.Name].Owner, Locks.Wall, false)
+
 	for _, Lock in Locks:GetDescendants() do
 		if Lock:IsA("BasePart") then
-			Lock.CanCollide = true
 			if Lock.Name == "Wall" then
 				continue
 			end
@@ -159,9 +153,9 @@ function BaseManager:UnlockBase(Base: string)
 		Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = "Lock Base"
 	end)
 
+	Locks.Wall.CanCollide = false
 	for _, Lock in Locks:GetDescendants() do
 		if Lock:IsA("BasePart") then
-			Lock.CanCollide = false
 			if Lock.Name == "Wall" then
 				continue
 			end
@@ -202,7 +196,7 @@ function BaseManager:AssignBase(Player: Player)
 	local Character = Player.Character or Player.CharacterAdded:Wait()
 	for _, Item: BasePart in Character:GetDescendants() do
 		if Item:IsA("BasePart") then
-			Item.CollisionGroup = "Owner - " .. BaseName
+			Item.CollisionGroup = "Player"
 		end
 	end
 
@@ -220,6 +214,10 @@ function BaseManager:TeleportPlayerToBase(Player: Player, Base: string?)
 end
 
 function BaseManager:ResetBase(Base: string)
+	local DataUtil = require(Utils.DataUtil)
+
+	local CurrentMemes = DataUtil:GetCurrentMemes(self.Bases[Base].Owner)
+
 	self.Bases[Base].Owner = nil
 	Base = BasesFolder[Base]
 	local Components = Base.Components
@@ -227,6 +225,21 @@ function BaseManager:ResetBase(Base: string)
 	local SignGui = Sign.Main.Sign.SurfaceGui
 
 	SignGui:FindFirstChildOfClass("TextLabel").Text = `Unclaimed Base`
+	if not CurrentMemes then
+		return
+	end
+	for ID, Meme in CurrentMemes do
+		local Name = Meme.Name
+		local Stand = Meme.Stand
+		Base.Slots[Stand]:SetAttribute("Meme", nil)
+		for _, _Meme in workspace:GetChildren() do
+			if _Meme.Name == Name then
+				if _Meme:GetAttribute("ID") == ID then
+					_Meme:Destroy()
+				end
+			end
+		end
+	end
 end
 
 return BaseManager

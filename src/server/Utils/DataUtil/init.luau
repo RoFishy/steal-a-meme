@@ -86,7 +86,7 @@ end
 function DataUtil:FirstTimePlayer(Player: Player): boolean
 	local Profile = Profiles[Player]
 	if Profile then
-		return Profile.Data.NewPlayer
+		return Profile.Data.NewPlayer == true
 	end
 end
 
@@ -99,9 +99,19 @@ function DataUtil:_SetupLeaderstats(Player: Player)
 	Cash.Name = "Cash"
 	Cash.Parent = leaderstats
 
+	local Steals = Instance.new("IntValue")
+	Steals.Name = "Steals"
+	Steals.Parent = leaderstats
+
+	local Rebirths = Instance.new("IntValue")
+	Rebirths.Name = "Rebirths"
+	Rebirths.Parent = leaderstats
+
 	local Profile = Profiles[Player]
 	if Profile then
 		Cash.Value = Profile.Data.Cash
+		Steals.Value = Profile.Data.Steals
+		Rebirths.Value = Profile.Data.Rebirths
 	end
 end
 
@@ -117,6 +127,22 @@ function DataUtil:IncrementCash(Player: Player, Amount: number)
 	if Profile then
 		Profile.Data.Cash += Amount
 		Player.leaderstats.Cash.Value = Profile.Data.Cash
+	end
+end
+
+function DataUtil:IncrementSteals(Player: Player, Amount: number)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.Steals += Amount
+		Player.leaderstats.Steals.Value = Profile.Data.Steals
+	end
+end
+
+function DataUtil:IncrementRebirths(Player: Player, Amount: number)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.Rebirths += Amount
+		Player.leaderstats.Rebirths.Value = Profile.Data.Rebirths
 	end
 end
 
@@ -187,6 +213,13 @@ function DataUtil:RemoveMemeFromPlayer(Player: Player, MemeObj)
 	end
 end
 
+function DataUtil:GetCurrentMemes(Player: Player)
+	local Profile = Profiles[Player]
+	if Profile then
+		return Profile.Data.Slots
+	end
+end
+
 function DataUtil:GetData(Player: Player): Types.UserData
 	if self:IsProfileLoaded(Player) then
 		return Profiles[Player].Data
@@ -198,7 +231,7 @@ end
 function DataUtil:CleanupProfile(Player: Player)
 	if Profiles[Player] then
 		Profiles[Player].Data.LastJoin = tick()
-		Profiles[Player].NewPlayer = false
+		Profiles[Player].Data.NewPlayer = false
 		Profiles[Player]:EndSession()
 	end
 end

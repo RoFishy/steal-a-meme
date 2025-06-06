@@ -1,0 +1,58 @@
+return {
+	["Slap Hand"] = {
+		Description = "Slap people to stop them from stealing your MEMES!",
+		Price = 500,
+		RebirthsRequired = 0,
+		Image = "rbxassetid://108924182605391",
+		LayoutOrder = 1,
+	},
+	["Speed Coil"] = {
+		Description = "Run like IShowSpeed with this speed coil!",
+		Price = 5000,
+		RebirthsRequired = 0,
+		Image = "rbxassetid://78187867501276",
+		LayoutOrder = 2,
+	},
+	["Banana Peel"] = {
+		Description = "Make other players slip on a banana!",
+		Price = 1000,
+		RebirthsRequired = 1,
+		Image = "rbxassetid://136348637617177",
+		LayoutOrder = 3,
+	},
+	["Grapple Hook"] = {
+		Description = "Shoot a hook like your batman!",
+		Price = 200000,
+		RebirthsRequired = 1,
+		Image = "rbxassetid://90845781628056",
+		LayoutOrder = 4,
+	},
+	["Gravity Coil"] = {
+		Description = "Jump like Lebron with this gravity coil!",
+		Price = 500000,
+		RebirthsRequired = 2,
+		Image = "rbxassetid://83218338367908",
+		LayoutOrder = 5,
+	},
+	["Gold Slap Hand"] = {
+		Description = "Slap people across earth with this!",
+		Price = 15000000,
+		RebirthsRequired = 2,
+		Image = "rbxassetid://81214425264052",
+		LayoutOrder = 6,
+	},
+	["Invisibility Cloak"] = {
+		Description = "Go invisible and steal others MEMES!",
+		Price = 90000000,
+		RebirthsRequired = 3,
+		Image = "rbxassetid://79929942436178",
+		LayoutOrder = 7,
+	},
+	["Magma Slap Hand"] = {
+		Description = "Slap people to another UNIVERSE WITH THIS!",
+		Price = 1000000000,
+		RebirthsRequired = 4,
+		Image = "rbxassetid://120838819586563",
+		LayoutOrder = 8,
+	},
+}

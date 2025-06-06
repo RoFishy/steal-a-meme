@@ -16,4 +16,13 @@ export type Spawn = {
 	Spawns: { [string]: MemeSpawn },
 }
 
+export type NPCDialogueOption = {
+	Option: string,
+	Callback: () -> ()?,
+}
+
+export type NPCDialogueOptions = {
+	[string]: NPCDialogueOption,
+}
+
 return {}

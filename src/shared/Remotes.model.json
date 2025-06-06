@@ -36,6 +36,14 @@
         {
             "Name": "HideBeam",
             "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "ToggleCollision",
+            "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "PurchaseTool",
+            "ClassName": "RemoteEvent"
         }
     ]
 }
