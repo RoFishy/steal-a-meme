@@ -44,6 +44,10 @@
         {
             "Name": "PurchaseTool",
             "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "Rebirth",
+            "ClassName": "RemoteEvent"
         }
     ]
 }

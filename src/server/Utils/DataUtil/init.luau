@@ -146,6 +146,13 @@ function DataUtil:IncrementRebirths(Player: Player, Amount: number)
 	end
 end
 
+function DataUtil:IncrementLockTime(Player: Player, Amount: number)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.LockTime += Amount
+	end
+end
+
 function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
 	local Profile = Profiles[Player]
 	if Profile then
@@ -154,6 +161,7 @@ function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
 			Info = MemeObj.Info,
 			Rarity = MemeObj.Rarity,
 			Stand = MemeObj.CurrentStand.Name,
+			Model = MemeObj.Model,
 		}
 		if not table.find(Profile.Data.Index, MemeObj.Name) then
 			local _replica = Replicas[Player]

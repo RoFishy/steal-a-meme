@@ -8,6 +8,7 @@ local DataTemplate: Types.UserData = {
 	Cash = 250,
 	Rebirths = 0,
 	Steals = 0,
+	LockTime = 60,
 	Slots = {},
 	LastJoin = nil,
 	Index = {},

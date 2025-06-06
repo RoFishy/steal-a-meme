@@ -26,6 +26,7 @@ local SPAWN_INTERVAL = 3
 
 -- // Variables
 local CurrentMemes = {}
+local CurrentServerLuck = 1
 
 -- // local function
 local function IndexDictionary(Dictionary, Index)
@@ -78,7 +79,7 @@ function SpawnManager:Start()
 	end)
 
 	while task.wait(SPAWN_INTERVAL) do
-		local Rarity = self:GetRandomRarity()
+		local Rarity = self:GetRandomRarity(CurrentServerLuck)
 		--local Rarity = "Common"
 		local RandomSpawn =
 			IndexDictionary(Spawns[Rarity]["Spawns"], math.random(1, GetDictionaryLength(Spawns[Rarity]["Spawns"])))
@@ -98,13 +99,35 @@ function SpawnManager:GetCurrentMemes()
 	return CurrentMemes
 end
 
-function SpawnManager:GetRandomRarity()
-	local RandomNumber = math.random(self.Sum)
-	for Name, Value in pairs(Spawns) do
+function SpawnManager:GetRandomRarity(LuckMultiplier: number?)
+	LuckMultiplier = LuckMultiplier or 1
+	local adjustedSpawns = {}
+	for name, value in pairs(Spawns) do
+		adjustedSpawns[name] = {
+			Rarity = value.Rarity,
+			Spawns = value.Spawns,
+		}
+
+		if name == "Rare" then
+			adjustedSpawns[name].Rarity = value.Rarity * math.min(LuckMultiplier, 2)
+		elseif name == "Mythical" then
+			adjustedSpawns[name].Rarity = value.Rarity * LuckMultiplier
+		elseif name == "Omega" or name == "SECRET???" then
+			adjustedSpawns[name].Rarity = value.Rarity * (LuckMultiplier * 1.5)
+		end
+	end
+
+	local adjustedSum = 0
+	for _, value in pairs(adjustedSpawns) do
+		adjustedSum = adjustedSum + value.Rarity
+	end
+
+	local RandomNumber = math.random(adjustedSum)
+	for Name, Value in pairs(adjustedSpawns) do
 		if RandomNumber <= Value.Rarity then
 			return Name
 		else
-			RandomNumber -= Value.Rarity
+			RandomNumber = RandomNumber - Value.Rarity
 		end
 	end
 end

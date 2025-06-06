@@ -5,6 +5,7 @@ local Players = game:GetService("Players")
 -- // Modules
 local Modules = ReplicatedStorage.Modules
 local Spawns = require(Modules.Spawns)
+local Rebirths = require(Modules.Rebirths)
 
 -- // Packages
 local Packages = ReplicatedStorage.Packages
@@ -260,6 +261,17 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 		OfflineAttachment.Billboard.Frame.offline.Text = `Offline Cash: ${FormatNumber(OfflineIncome)}`
 	end
 
+	local CollectMultiplier
+
+	local leaderstats = self.PurchasePlayer:WaitForChild("leaderstats")
+	local PlayerRebirths = leaderstats.Rebirths
+
+	if PlayerRebirths.Value > 0 then
+		CollectMultiplier = Rebirths[PlayerRebirths.Value].Rewards.Multiplier
+	else
+		CollectMultiplier = 1
+	end
+
 	table.insert(
 		self.Connections,
 		CollectButton.Touched:Connect(function(Hit: Part)
@@ -277,7 +289,7 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 		self.Threads,
 		task.spawn(function()
 			while task.wait(1) do
-				self.CurrentEarned += self.Info.Income
+				self.CurrentEarned += (self.Info.Income * CollectMultiplier)
 
 				CollectButton.Attachment.Billboard.Frame.amount.Text = `${FormatNumber(self.CurrentEarned)}`
 			end

@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- // Modules
 local Modules = ReplicatedStorage.Modules
 local Products = require(Modules.Products)
+local Rebirths = require(Modules.Rebirths)
 
 -- // Remotes
 local Remotes = ReplicatedStorage.Remotes
@@ -23,7 +24,6 @@ local BasesFolder = workspace.Bases
 local Floor = workspace.Floor
 
 -- // Constants
-local LOCK_TIME = 60
 local LOCK_COOLDOWN = 30
 local BYPASS_COOLDOWN_PRODUCT = Products.BypassLockCooldown.ProductId
 
@@ -31,6 +31,7 @@ local BYPASS_COOLDOWN_PRODUCT = Products.BypassLockCooldown.ProductId
 local BaseManager = {}
 
 function BaseManager.Init()
+	BaseManager.Junk = {}
 	-- // Meme init
 	PhysicsService:RegisterCollisionGroup("Meme")
 	PhysicsService:CollisionGroupSetCollidable("Meme", "Meme", false)
@@ -76,7 +77,9 @@ function BaseManager:Start()
 
 		LockButton.Touched:Connect(function(Hit: Part)
 			local Player = Players:GetPlayerFromCharacter(Hit.Parent)
+			local DataUtil = require(script.Parent.Parent.Utils.DataUtil)
 			if Player then
+				local LockTime = DataUtil:GetData(Player).LockTime
 				local BaseData = self.Bases[Base.Name]
 				if BaseData.Owner and BaseData.Owner == Player then
 					if BaseData.Locked then
@@ -88,7 +91,7 @@ function BaseManager:Start()
 					self:LockBase(Base.Name)
 					ShowNotification:FireClient(
 						Player,
-						`You have locked your base for {LOCK_TIME} seconds!`,
+						`You have locked your base for {LockTime} seconds!`,
 						Color3.fromRGB(0, 255, 0)
 					)
 				end
@@ -111,11 +114,15 @@ function BaseManager:LockBase(Base: string)
 
 	self.Bases[Base.Name].Locked = true
 
+	local DataUtil = require(script.Parent.Parent.Utils.DataUtil)
+	local PlayerData = DataUtil:GetData(self.Bases[Base.Name].Owner)
+	local LockTime = PlayerData.LockTime
+
 	local Components = Base.Components
 	local Locks = Components.Lock
 
 	task.spawn(function()
-		for i = LOCK_TIME, 0, -1 do
+		for i = LockTime, 0, -1 do
 			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Text = `Locked for: {i}`
 			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = `Locked for: {i}`
 			task.wait(1)
@@ -174,6 +181,7 @@ function BaseManager:GetEmptyBaseName(): string
 end
 
 function BaseManager:AssignBase(Player: Player)
+	self.Junk[Player] = {}
 	if self:GetBaseNameFromPlayer(Player) then
 		return
 	end
@@ -188,6 +196,18 @@ function BaseManager:AssignBase(Player: Player)
 	local Components = BaseModel.Components
 	local Sign = Components.Sign
 	local SignGui = Sign.Main.Sign.SurfaceGui
+	local CashMultiText = Components.CashMulti.Attachment.Billboard.Frame.TextLow
+
+	local leaderstats = Player:WaitForChild("leaderstats")
+	local PlayerRebirths = leaderstats.Rebirths
+
+	local Multiplier = Rebirths[PlayerRebirths.Value] and Rebirths[PlayerRebirths.Value].Rewards.Multiplier or 1
+	CashMultiText.Text = `Cash Multiplier: {Multiplier}x`
+
+	PlayerRebirths:GetPropertyChangedSignal("Value"):Connect(function()
+		Multiplier = Rebirths[PlayerRebirths.Value].Rewards.Multiplier or 1
+		CashMultiText.Text = `Cash Multiplier: {Multiplier}x`
+	end)
 
 	SignGui:FindFirstChildOfClass("TextLabel").Text = `{Player.Name}'s Base`
 	self:TeleportPlayerToBase(Player, BaseName)
@@ -218,11 +238,20 @@ function BaseManager:ResetBase(Base: string)
 
 	local CurrentMemes = DataUtil:GetCurrentMemes(self.Bases[Base].Owner)
 
+	if self.Bases[Base].Owner then
+		for _, obj in self.Junk[self.Bases[Base].Owner] do
+			obj:Disconnect()
+		end
+	end
+
 	self.Bases[Base].Owner = nil
 	Base = BasesFolder[Base]
 	local Components = Base.Components
 	local Sign = Components.Sign
 	local SignGui = Sign.Main.Sign.SurfaceGui
+	local CashMultiText = Components.CashMulti.Attachment.Billboard.Frame.TextLow
+
+	CashMultiText.Text = "Cash Multiplier: 1x"
 
 	SignGui:FindFirstChildOfClass("TextLabel").Text = `Unclaimed Base`
 	if not CurrentMemes then
