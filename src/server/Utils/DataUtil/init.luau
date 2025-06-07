@@ -10,10 +10,6 @@ local Types = require(Modules.Types)
 local DataTemplate = require(script.Template)
 local ProfileStore = require(script.ProfileStore)
 
--- // Managers
-local Services = script.Parent.Parent.Services
-local BaseManager = require(Services.BaseManager)
-
 -- // Packages
 local Packages = ReplicatedStorage.Packages
 local Replica = require(Packages.Replica)
@@ -34,6 +30,15 @@ local DATA_TOKEN = Replica.Token("PlayerData")
 -- // Var
 local Profiles = {} :: { [Player]: typeof(ProfileStore:StartSessionAsync()) }
 local Replicas = {}
+
+-- // local funcs
+local function GetPlayerBase(Player: Player)
+	for _, Base in workspace.Bases:GetChildren() do
+		if Base:GetAttribute("Owner") == Player.Name then
+			return Base
+		end
+	end
+end
 
 -- // Module
 local DataUtil = {}
@@ -161,6 +166,8 @@ function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
 			Info = MemeObj.Info,
 			Rarity = MemeObj.Rarity,
 			Stand = MemeObj.CurrentStand.Name,
+
+			-- // cleanup on game end:
 			Model = MemeObj.Model,
 		}
 		if not table.find(Profile.Data.Index, MemeObj.Name) then
@@ -179,8 +186,7 @@ end
 function DataUtil:LoadMemes(Player: Player)
 	local Profile = Profiles[Player]
 	if Profile then
-		local PlayerBase = BaseManager:GetBaseNameFromPlayer(Player)
-		PlayerBase = workspace.Bases:FindFirstChild(PlayerBase)
+		local PlayerBase = GetPlayerBase(Player)
 
 		local Slots = Profile.Data.Slots
 		for ID, Slot in Slots do
@@ -238,6 +244,11 @@ end
 
 function DataUtil:CleanupProfile(Player: Player)
 	if Profiles[Player] then
+		for _, Slot in Profiles[Player].Data.Slots do
+			if Slot.Model then
+				Slot.Model = nil
+			end
+		end
 		Profiles[Player].Data.LastJoin = tick()
 		Profiles[Player].Data.NewPlayer = false
 		Profiles[Player]:EndSession()

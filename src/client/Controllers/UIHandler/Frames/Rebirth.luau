@@ -1,6 +1,7 @@
 -- // Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 
 -- // Player
 local LocalPlayer = Players.LocalPlayer
@@ -76,6 +77,7 @@ function Rebirth:Start()
 						Color3.fromRGB(255, 0, 255)
 					)
 				end
+				SoundService:PlayLocalSound(SoundService.LeaveGiftOpen)
 				RebirthRemote:FireServer()
 			end)
 		)
@@ -131,13 +133,14 @@ function Rebirth:UpdateRewards()
 	end
 	local nameOccurrences = {}
 	for _, ToolFrame in RewardsHolder:GetChildren() do
-		if string.find(ToolFrame.Name, "Tool") and ToolFrame.Name ~= "Tool" then
-			if table.find(nameOccurrences, ToolFrame.name.Text) then
-				ToolFrame:Destroy()
-				continue
-			end
-			table.insert(nameOccurrences, ToolFrame.name.Text)
+		if not ToolFrame:IsA("Frame") then
+			continue
 		end
+		if table.find(nameOccurrences, ToolFrame.name.Text) then
+			ToolFrame:Destroy()
+			continue
+		end
+		table.insert(nameOccurrences, ToolFrame.name.Text)
 	end
 end
 

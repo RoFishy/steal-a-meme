@@ -1,6 +1,7 @@
 -- // Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
 
 -- // Modules
 local Modules = ReplicatedStorage.Modules
@@ -22,9 +23,6 @@ local SmackPlayer = Remotes.SmackPlayer
 local Utils = script.Parent
 local Signal = require(Utils.Signals)
 
--- // Managers
-local BaseManager = require(script.Parent.Parent.Services.BaseManager)
-
 -- // Objects
 local SpawnsFolder = ReplicatedStorage.Spawns
 local BasesFolder = workspace.Bases
@@ -43,6 +41,14 @@ local function FormatNumber(n)
 	local d = math.floor(math.log10(n) / 3) * 3
 	local s = tostring(n / (10 ^ d)):sub(1, 5)
 	return s .. tostring(NUMBER_SUFFIX[math.floor(d / 3)])
+end
+
+local function GetPlayerBase(Player: Player)
+	for _, Base in BasesFolder:GetChildren() do
+		if Base:GetAttribute("Owner") == Player.Name then
+			return Base
+		end
+	end
 end
 
 -- // Init
@@ -157,8 +163,7 @@ function Meme:Steal(StealPlayer: Player)
 	Weld.Part0 = StealPlayer.Character.HumanoidRootPart
 	Weld.Part1 = self.Model.PrimaryPart
 
-	local StealPlayerBase = BaseManager:GetBaseNameFromPlayer(StealPlayer)
-	StealPlayerBase = BasesFolder[StealPlayerBase]
+	local StealPlayerBase = GetPlayerBase(StealPlayer)
 
 	local BaseComponents = StealPlayerBase.Components
 	local BaseCollectZone = BaseComponents.CollectZone.CollectPart
@@ -170,7 +175,7 @@ function Meme:Steal(StealPlayer: Player)
 			if OtherPlayer == StealPlayer then
 				self.PurchasePlayer = originalPlayer
 
-				local PurchasePlayerBase = BasesFolder[BaseManager:GetBaseNameFromPlayer(self.PurchasePlayer)]
+				local PurchasePlayerBase = GetPlayerBase(self.PurchasePlayer)
 				local Slots = PurchasePlayerBase.Slots
 				local OpenSlot = self:GetOpenSlot(Slots)
 				self.CurrentStand = OpenSlot
@@ -240,7 +245,9 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	end
 
 	local SellPrice = math.ceil(self.Info.Price * 0.5)
+	print(self.Prompt)
 	if LoadData == nil and value == nil then
+		task.wait(1)
 		TogglePrompt:FireClient(self.PurchasePlayer, self.Prompt, true)
 	end
 	self.Prompt.ObjectText = self.Name
@@ -250,7 +257,9 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 			EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
 		end)
 	else
-		EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+		task.delay(1, function()
+			EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+		end)
 	end
 
 	local CollectButton: Part = Slot.Collect
@@ -272,11 +281,24 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 		CollectMultiplier = 1
 	end
 
+	if self.PurchasePlayer:GetAttribute("2xCash") then
+		CollectMultiplier += 2
+	end
+	local TouchDebounce = false
 	table.insert(
 		self.Connections,
 		CollectButton.Touched:Connect(function(Hit: Part)
 			local Player = Players:GetPlayerFromCharacter(Hit.Parent)
-			if Player and Player == self.PurchasePlayer then
+			if Player and Player == self.PurchasePlayer and not TouchDebounce then
+				TouchDebounce = true
+				task.delay(0.5, function()
+					TouchDebounce = false
+				end)
+				task.spawn(function()
+					local Sound = SoundService.CashCollect:Clone()
+					Sound.Parent = CollectButton
+					Sound:Play()
+				end)
 				Signal.PlayerCollectedCash:Fire(self.PurchasePlayer)
 				Signal.IncrementCash:Fire(Player, self.CurrentEarned)
 				self.CurrentEarned = 0
@@ -328,8 +350,7 @@ function Meme:SetupConnections()
 			end
 			local Cash = Player.leaderstats.Cash.Value
 
-			local PlayerBase = BaseManager:GetBaseNameFromPlayer(Player)
-			PlayerBase = BasesFolder[PlayerBase]
+			local PlayerBase = GetPlayerBase(Player)
 
 			if not self:GetOpenSlot(PlayerBase.Slots) then
 				ShowNotification:FireClient(Player, "You do not have any open slots!")

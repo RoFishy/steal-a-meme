@@ -1,6 +1,7 @@
 -- // Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
 
 -- // Player
 local LocalPlayer = Players.LocalPlayer
@@ -36,6 +37,9 @@ function BaseHandler:Start()
 
 	ToggleCollision.OnClientEvent:Connect(function(Part: BasePart, CanCollide: boolean)
 		Part.CanCollide = CanCollide
+		if CanCollide == false then
+			SoundService:PlayLocalSound(SoundService.LockBase)
+		end
 	end)
 end
 

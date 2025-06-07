@@ -100,6 +100,30 @@ function BaseManager:Start()
 	end
 end
 
+function BaseManager:RemoteLock(Player: Player)
+	local Base = BasesFolder[self:GetBaseNameFromPlayer(Player)]
+	local Components = Base.Components
+	local LockButton: Part = Components.LockButton
+	local DataUtil = require(script.Parent.Parent.Utils.DataUtil)
+
+	local LockTime = DataUtil:GetData(Player).LockTime
+	local BaseData = self.Bases[Base.Name]
+	if BaseData.Owner and BaseData.Owner == Player then
+		if BaseData.Locked then
+			return
+		end
+		if LockButton.Attachment.Billboard.Frame.TextUpper.Text ~= "Lock Base" then -- its o n cooldown
+			return MarketplaceService:PromptProductPurchase(Player, BYPASS_COOLDOWN_PRODUCT)
+		end
+		self:LockBase(Base.Name)
+		ShowNotification:FireClient(
+			Player,
+			`You have locked your base for {LockTime} seconds!`,
+			Color3.fromRGB(0, 255, 0)
+		)
+	end
+end
+
 function BaseManager:GetBaseNameFromPlayer(Player: Player): string?
 	for Name, Base in self.Bases do
 		if Base.Owner == Player then
@@ -192,6 +216,7 @@ function BaseManager:AssignBase(Player: Player)
 	self.Bases[BaseName].Owner = Player
 
 	local BaseModel = BasesFolder[BaseName]
+	BaseModel:SetAttribute("Owner", Player.Name)
 
 	local Components = BaseModel.Components
 	local Sign = Components.Sign
@@ -246,6 +271,7 @@ function BaseManager:ResetBase(Base: string)
 
 	self.Bases[Base].Owner = nil
 	Base = BasesFolder[Base]
+	Base:SetAttribute("Owner", nil)
 	local Components = Base.Components
 	local Sign = Components.Sign
 	local SignGui = Sign.Main.Sign.SurfaceGui

@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- // managers
 local BaseManager = require(script.Parent.BaseManager)
+local PassManager = require(script.Parent.PassManager)
 
 -- // Utils
 local Utils = script.Parent.Parent.Utils
@@ -28,6 +29,7 @@ function PlayerManager:Start()
 			if DataUtil:FirstTimePlayer(Player) then
 				TutorialUtil.new(Player)
 			end
+			PassManager:LoadPlayerPasses(Player)
 		end)
 	end)
 	Players.PlayerRemoving:Connect(function(Player)
