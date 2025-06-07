@@ -1,6 +1,7 @@
 -- // Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local BadgeService = game:GetService("BadgeService")
 
 -- // managers
 local BaseManager = require(script.Parent.BaseManager)
@@ -15,6 +16,14 @@ local TutorialUtil = require(Utils.TutorialUtil)
 -- // Packages
 local Packages = ReplicatedStorage.Packages
 local Replica = require(Packages.Replica)
+
+-- // const
+local JOIN_BADGES = {
+	2402115111693328,
+	754605630599465,
+	3081929432379574,
+	4092411003650709,
+}
 
 -- // Module
 local PlayerManager = {}
@@ -31,6 +40,9 @@ function PlayerManager:Start()
 			end
 			PassManager:LoadPlayerPasses(Player)
 		end)
+		for _, BadgeId in JOIN_BADGES do
+			BadgeService:AwardBadge(Player.UserId, BadgeId)
+		end
 	end)
 	Players.PlayerRemoving:Connect(function(Player)
 		local Base = BaseManager:GetBaseNameFromPlayer(Player)

@@ -53,7 +53,7 @@ return {
 		},
 	},
 	["Epic"] = {
-		Rarity = 10,
+		Rarity = 15,
 		Spawns = {
 			["Floppa"] = {
 				Price = 12500,
@@ -74,7 +74,7 @@ return {
 		},
 	},
 	["Legendary"] = {
-		Rarity = 5,
+		Rarity = 2,
 		Spawns = {
 			["John Pork"] = {
 				Price = 120000,
@@ -95,7 +95,7 @@ return {
 		},
 	},
 	["Mythical"] = {
-		Rarity = 3,
+		Rarity = 0.5,
 		Spawns = {
 			["Tim Cheese"] = {
 				Price = 700000,
@@ -112,7 +112,7 @@ return {
 		},
 	},
 	["Omega"] = {
-		Rarity = 1.5,
+		Rarity = 0.25,
 		Spawns = {
 			["Turi ip ip ip"] = {
 				Price = 3000000,
@@ -129,7 +129,7 @@ return {
 		},
 	},
 	["SECRET???"] = {
-		Rarity = 0.5,
+		Rarity = 0.05,
 		Spawns = {
 			["Chicken Jockey"] = {
 				Price = 99000000,

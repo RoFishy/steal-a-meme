@@ -12,4 +12,8 @@ return {
 	IncrementCash = Signal.new(),
 
 	PlayerCollectedCash = Signal.new(),
+
+	-- // luck
+	ResetServerLuck = Signal.new(),
+	IncreaseServerLuck = Signal.new(),
 }

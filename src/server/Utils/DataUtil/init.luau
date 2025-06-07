@@ -1,6 +1,7 @@
 -- // Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataStoreService = game:GetService("DataStoreService")
 
 -- // shared modules
 local Modules = ReplicatedStorage.Modules
@@ -13,6 +14,10 @@ local ProfileStore = require(script.ProfileStore)
 -- // Packages
 local Packages = ReplicatedStorage.Packages
 local Replica = require(Packages.Replica)
+
+-- // Ordered DS
+local StealsOrderedDS = DataStoreService:GetOrderedDataStore("OrderedSteals")
+local CashOrderedDS = DataStoreService:GetOrderedDataStore("OrderedCash")
 
 -- // Remotes
 local Remotes = ReplicatedStorage.Remotes
@@ -151,6 +156,13 @@ function DataUtil:IncrementRebirths(Player: Player, Amount: number)
 	end
 end
 
+function DataUtil:SetFreePetClaimed(Player: Player)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.ClaimedFreePet = true
+	end
+end
+
 function DataUtil:IncrementLockTime(Player: Player, Amount: number)
 	local Profile = Profiles[Player]
 	if Profile then
@@ -199,6 +211,7 @@ function DataUtil:LoadMemes(Player: Player)
 			_meme.Model:SetAttribute("ID", ID)
 			_meme.PurchasePlayer = Player
 			_meme.CurrentStand = OpenSlot
+			Profile.Data.Slots[ID].Model = _meme.Model
 			task.cancel(_meme.CurrentMove)
 			local offlineEarnings = self:CalculateOfflineEarnings(Player, _meme)
 			_meme:AddToSlot(OpenSlot, true, offlineEarnings)
@@ -249,6 +262,11 @@ function DataUtil:CleanupProfile(Player: Player)
 				Slot.Model = nil
 			end
 		end
+		task.spawn(function()
+			local data = Profiles[Player].Data
+			CashOrderedDS:SetAsync(Player.UserId, data.Cash)
+			StealsOrderedDS:SetAsync(Player.UserId, data.Steals)
+		end)
 		Profiles[Player].Data.LastJoin = tick()
 		Profiles[Player].Data.NewPlayer = false
 		Profiles[Player]:EndSession()

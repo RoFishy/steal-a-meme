@@ -26,6 +26,7 @@ function RebirthManager:Start()
 			DataUtil:IncrementRebirths(Player, 1)
 
 			local CurrentMemes = DataUtil:GetCurrentMemes(Player)
+			print(CurrentMemes)
 			for _, Meme in CurrentMemes do
 				DataUtil:RemoveMemeFromPlayer(Player, Meme)
 				Meme.Model:Destroy()

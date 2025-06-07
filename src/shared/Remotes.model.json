@@ -48,6 +48,10 @@
         {
             "Name": "Rebirth",
             "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "ClaimFreePet",
+            "ClassName": "RemoteEvent"
         }
     ]
 }

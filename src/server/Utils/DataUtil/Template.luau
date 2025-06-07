@@ -13,6 +13,7 @@ local DataTemplate: Types.UserData = {
 	LastJoin = nil,
 	Index = {},
 	NewPlayer = true,
+	ClaimedFreePet = false,
 }
 
 return DataTemplate

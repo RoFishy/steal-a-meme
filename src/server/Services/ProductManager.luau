@@ -1,6 +1,7 @@
 -- // Services
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 
 -- // Modules
 local Modules = ReplicatedStorage.Modules
@@ -26,6 +27,12 @@ local function ProcessReceipt(ReceiptInfo: {
 	local Product = Products[GetProductNameById(ReceiptInfo.ProductId)]
 	if Product then
 		Product.Callback(game.Players:GetPlayerByUserId(ReceiptInfo.PlayerId))
+		local sound = SoundService.Success:Clone()
+		sound.Parent = game.Players:GetPlayerByUserId(ReceiptInfo.PlayerId).Character.HumanoidRootPart
+		sound:Play()
+		task.delay(3, function()
+			sound:Destroy()
+		end)
 		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end
 	return Enum.ProductPurchaseDecision.NotProcessedYet

@@ -4,6 +4,7 @@ export type UserData = {
 	LastJoin: number?,
 	Index: {},
 	NewPlayer: boolean,
+	ClaimedFreePet: boolean,
 }
 
 export type MemeSpawn = {

@@ -24,6 +24,9 @@ local GEARS_CANVAS_POSITION = Vector2.new(0, 305)
 local PASSES_CANVAS_POSITION = Vector2.new(0, 600)
 local MONEY_CANVAS_POSITION = Vector2.new(0, 1055.574)
 
+-- // Luck stuff
+local CurrentLuck = ReplicatedStorage.CurrentLuck
+
 -- // UI
 local MainUI = PlayerGui:WaitForChild("UI")
 local ShopFrame = MainUI:WaitForChild("Frames"):WaitForChild("Shop")
@@ -40,6 +43,19 @@ local Shop = {}
 
 function Shop.Init()
 	Shop.Junk = {}
+
+	CurrentLuck:GetPropertyChangedSignal("Value"):Connect(function()
+		local info = Shop:GetRobuxProductInfo(Products[`x{CurrentLuck.Value * 2} Luck`].ProductId)
+		if CurrentLuck.Value == 16 then
+			ScrollingFrame.Luck.before.Text = "MAX"
+			ScrollingFrame.Luck.after.Text = "MAX"
+			ScrollingFrame.Luck.buy.price.Text = "MAX"
+			return
+		end
+		ScrollingFrame.Luck.Buy.price.Text = "" .. info.PriceInRobux
+		ScrollingFrame.Luck.before.Text = tostring(CurrentLuck.Value) .. "x"
+		ScrollingFrame.Luck.after.Text = tostring(CurrentLuck.Value * 2) .. "x"
+	end)
 end
 
 function Shop:Start()
@@ -135,6 +151,28 @@ function Shop:Start()
 			end
 		end)
 	)
+	table.insert(
+		self.Junk,
+		Button(ScrollingFrame.Luck.Buy, function()
+			if ReplicatedStorage.CurrentLuck.Value == 16 then
+				return
+			end
+			local Product = Products[`x{CurrentLuck.Value * 2} Luck`]
+			if Product then
+				MarketplaceService:PromptProductPurchase(LocalPlayer, Product.ProductId)
+			end
+		end)
+	)
+end
+
+function Shop:GetRobuxProductInfo(ProductId: number)
+	local success, response = pcall(function()
+		return MarketplaceService:GetProductInfo(ProductId, Enum.InfoType.Product)
+	end)
+
+	if success then
+		return response
+	end
 end
 
 function Shop:GetCashProductInfo(_Name: string)

@@ -113,13 +113,31 @@ function Meme:SetCollisionGroup(NewGroup: string)
 	end
 end
 
-function Meme:GetOpenSlot(Slots: Folder)
+function Meme:GetSlotByIndex(Index: number, Slots: Folder)
 	for _, Slot in Slots:GetChildren() do
+		if string.find(Slot.Name, tostring(Index)) then
+			return Slot
+		end
+	end
+end
+
+function Meme:GetOpenSlot(Slots: Folder)
+	for i = 1, #Slots:GetChildren() do
+		local CurrentSlot = self:GetSlotByIndex(i, Slots)
+		if CurrentSlot:GetAttribute("Meme") then
+			continue
+		end
+		return CurrentSlot
+	end
+	--[[
+		for _, Slot in Slots:GetChildren() do
 		if Slot:GetAttribute("Meme") then
 			continue
 		end
 		return Slot
 	end
+	]]
+	--
 	return nil
 end
 
@@ -140,7 +158,9 @@ function Meme:Steal(StealPlayer: Player)
 	)
 	Signal.RemoveMemeFromPlayer:Fire(self.PurchasePlayer, self)
 	local originalPlayer = self.PurchasePlayer
-	self:Cleanup()
+	pcall(function()
+		self:Cleanup()
+	end)
 	TogglePrompt:FireAllClients(self.Prompt, false)
 
 	for _, Part: BasePart in self.Model:GetChildren() do
@@ -245,7 +265,6 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	end
 
 	local SellPrice = math.ceil(self.Info.Price * 0.5)
-	print(self.Prompt)
 	if LoadData == nil and value == nil then
 		task.wait(1)
 		TogglePrompt:FireClient(self.PurchasePlayer, self.Prompt, true)
@@ -268,6 +287,7 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 		self.CurrentEarned += OfflineIncome
 		local OfflineAttachment = CollectButton.OfflineAttachment
 		OfflineAttachment.Billboard.Frame.offline.Text = `Offline Cash: ${FormatNumber(OfflineIncome)}`
+		OfflineAttachment.Billboard.Frame.Visible = true
 	end
 
 	local CollectMultiplier
@@ -304,6 +324,7 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 				self.CurrentEarned = 0
 				CollectButton.Attachment.Billboard.Frame.amount.Text = `${FormatNumber(self.CurrentEarned)}`
 				CollectButton.OfflineAttachment.Billboard.Frame.offline.Text = `Offline Cash: $0`
+				CollectButton.OfflineAttachment.Billboard.Frame.Visible = false
 			end
 		end)
 	)
@@ -323,6 +344,12 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 			if Player == self.PurchasePlayer then
 				Signal.IncrementCash:Fire(Player, SellPrice)
 				Signal.RemoveMemeFromPlayer:Fire(self.PurchasePlayer, self)
+				local sound = SoundService.CashCollect:Clone()
+				sound.Parent = self.Model.HumanoidRootPart
+				sound:Play()
+				task.delay(2, function()
+					sound:Destroy()
+				end)
 				self:Destroy()
 			else
 				self:Steal(Player)
@@ -353,12 +380,24 @@ function Meme:SetupConnections()
 			local PlayerBase = GetPlayerBase(Player)
 
 			if not self:GetOpenSlot(PlayerBase.Slots) then
-				ShowNotification:FireClient(Player, "You do not have any open slots!")
+				local err = SoundService.Error:Clone()
+				err.Parent = self.Model.PrimaryPart
+				err:Play()
+				task.delay(1, function()
+					err:Destroy()
+				end)
+				return ShowNotification:FireClient(Player, "You do not have any open slots!")
 			end
 
 			if Cash >= self.Info.Price then
 				Signal.IncrementCash:Fire(Player, -self.Info.Price)
 				TogglePrompt:FireClient(Player, ProximityPrompt, false)
+				local sound = SoundService.Success:Clone()
+				sound.Parent = Player.PlayerGui
+				sound:Play()
+				task.delay(3, function()
+					sound:Destroy()
+				end)
 
 				local Slots = PlayerBase.Slots
 				local OpenSlot = self:GetOpenSlot(Slots)
@@ -377,7 +416,14 @@ function Meme:SetupConnections()
 					end
 				end)
 			else
+				local err = SoundService.Error:Clone()
+				err.Parent = self.Model.PrimaryPart
+				err:Play()
+				task.delay(1, function()
+					err:Destroy()
+				end)
 				ShowNotification:FireClient(Player, "You do not have enough cash to purchase this meme!")
+				return
 			end
 		end)
 	)

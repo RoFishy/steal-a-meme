@@ -29,6 +29,10 @@ local HideTutorialFrame = Remotes.HideTutorialFrame
 local ShowBeam = Remotes.ShowBeam
 local HideBeam = Remotes.HideBeam
 
+-- // Luck stuff
+local CurrentLuck = ReplicatedStorage.CurrentLuck
+local LuckTime = ReplicatedStorage.LuckTime
+
 -- // Types
 local Modules = ReplicatedStorage:WaitForChild("Modules")
 local Types = require(Modules.Types)
@@ -50,8 +54,14 @@ local ShopButton = LeftButtons.Shop
 local RebirthButton = LeftButtons.Rebirth
 local IndexButton = LeftButtons.Index
 
+local RightButtons = HUD.Right
+local FreeButton = RightButtons.Free
+
 local StatsHolder = HUD.Stats
 local CashLabel = StatsHolder.coins
+local LuckLabel = StatsHolder.luck
+
+local MusicButton = HUD.Music
 
 local Frames = MainUI:WaitForChild("Frames")
 
@@ -93,6 +103,18 @@ local function FormatCash(Amount: number): string
 	return formatted
 end
 
+function Format(Int)
+	return string.format("%02i", Int)
+end
+
+function convertToMS(Seconds)
+	local Minutes = (Seconds - Seconds % 60) / 60
+	Seconds = Seconds - Minutes * 60
+	local Hours = (Minutes - Minutes % 60) / 60
+	Minutes = Minutes - Hours * 60
+	return Format(Minutes) .. ":" .. Format(Seconds)
+end
+
 function coreCall(method, ...)
 	local result = {}
 	for _ = 1, MAX_RETRIES do
@@ -117,6 +139,9 @@ function UIHandler.Init()
 	end)
 	Button(IndexButton, function()
 		UIHandler:OpenFrame("Index")
+	end)
+	Button(FreeButton, function()
+		UIHandler:OpenFrame("Free")
 	end)
 end
 
@@ -194,6 +219,34 @@ function UIHandler:Start()
 		TweenService:Create(TutorialFrame.UIScale, TweenInfo.new(0.3), { Scale = 0 }):Play()
 		task.wait(0.3)
 		TutorialFrame.Visible = false
+	end)
+
+	-- // Luck stuff
+	LuckLabel.Visible = false
+	StatsHolder.luckimg.Visible = false
+	LuckTime:GetPropertyChangedSignal("Value"):Connect(function()
+		if LuckTime.Value > 0 then
+			StatsHolder.luckimg.Visible = true
+			LuckLabel.Visible = true
+			local Time = convertToMS(LuckTime.Value)
+			LuckLabel.Text = `x{tostring(CurrentLuck.Value)} Server Luck: {Time}`
+		else
+			StatsHolder.luckimg.Visible = false
+			LuckLabel.Visible = false
+		end
+	end)
+
+	-- // music
+	local musicOn = true
+	Button(MusicButton, function()
+		local Music = workspace.Music
+		if musicOn then
+			musicOn = false
+			Music.Volume = 0
+		else
+			musicOn = true
+			Music.Volume = 0.3
+		end
 	end)
 end
 

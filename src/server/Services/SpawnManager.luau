@@ -14,6 +14,7 @@ local ShowNotification = Remotes.ShowNotification
 -- // Utils
 local Utils = script.Parent.Parent.Utils
 local Meme = require(Utils.Meme)
+local Signals = require(Utils.Signals)
 
 -- // Objects
 local ConveyorSystem = workspace.ConveyorSystem
@@ -21,12 +22,22 @@ local ConveyorSystem = workspace.ConveyorSystem
 local StartPart = ConveyorSystem.Spawn
 local EndPart = ConveyorSystem.End
 
+local TimersScreen = workspace.Spawn.Timers.Screen
+
+local GuaranteedRequirements = {
+	Mythical = 900,
+	Legendary = 300,
+	Omega = 1800,
+	["SECRET???"] = 3600,
+}
+
 -- // Const
 local SPAWN_INTERVAL = 3
 
 -- // Variables
 local CurrentMemes = {}
 local CurrentServerLuck = 1
+local CurrentRarity = nil
 
 -- // local function
 local function IndexDictionary(Dictionary, Index)
@@ -55,6 +66,18 @@ local function GetNameFromValue(Dictionary, Value)
 	end
 end
 
+function Format(Int)
+	return string.format("%02i", Int)
+end
+
+function convertToMS(Seconds)
+	local Minutes = (Seconds - Seconds % 60) / 60
+	Seconds = Seconds - Minutes * 60
+	local Hours = (Minutes - Minutes % 60) / 60
+	Minutes = Minutes - Hours * 60
+	return Format(Minutes) .. ":" .. Format(Seconds)
+end
+
 -- // Init
 local SpawnManager = {}
 
@@ -78,8 +101,37 @@ function SpawnManager:Start()
 		end
 	end)
 
+	Signals.IncreaseServerLuck:Connect(function()
+		CurrentServerLuck *= 2
+	end)
+	Signals.ResetServerLuck:Connect(function()
+		CurrentServerLuck = 1
+	end)
+
+	for Name, DropTime in GuaranteedRequirements do
+		local TextLabel = TimersScreen[Name].SurfaceGui.timer
+		local Time = DropTime
+		task.spawn(function()
+			while task.wait() do
+				while Time > 0 do
+					TextLabel.Text = `Guaranteed {Name} in: {convertToMS(Time)}`
+					task.wait(1)
+					Time -= 1
+				end
+				TextLabel.Text = `Guaranteed {Name} dropping NOW!`
+				repeat
+					task.wait()
+				until not CurrentRarity
+				CurrentRarity = Name
+				task.wait(2)
+				Time = DropTime
+			end
+		end)
+	end
+
 	while task.wait(SPAWN_INTERVAL) do
-		local Rarity = self:GetRandomRarity(CurrentServerLuck)
+		local Rarity = CurrentRarity or self:GetRandomRarity(CurrentServerLuck)
+		CurrentRarity = nil
 		--local Rarity = "Common"
 		local RandomSpawn =
 			IndexDictionary(Spawns[Rarity]["Spawns"], math.random(1, GetDictionaryLength(Spawns[Rarity]["Spawns"])))
