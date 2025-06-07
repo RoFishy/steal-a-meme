@@ -38,7 +38,7 @@ return {
 		Description = "Slap people across earth with this!",
 		Price = 15000000,
 		RebirthsRequired = 2,
-		Image = "rbxassetid://81214425264052",
+		Image = "rbxassetid://120838819586563",
 		LayoutOrder = 6,
 	},
 	["Invisibility Cloak"] = {
@@ -52,7 +52,7 @@ return {
 		Description = "Slap people to another UNIVERSE WITH THIS!",
 		Price = 1000000000,
 		RebirthsRequired = 4,
-		Image = "rbxassetid://120838819586563",
+		Image = "rbxassetid://81214425264052",
 		LayoutOrder = 8,
 	},
 }
