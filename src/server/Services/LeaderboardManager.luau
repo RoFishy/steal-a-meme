@@ -33,16 +33,41 @@ local function FormatNumber(n)
 	return s .. tostring(NUMBER_SUFFIX[math.floor(d / 3)])
 end
 
+local function GetPlayerName(UserId: number)
+	local MAX_RETRIES = 5
+	local RETRY_DELAY = 0.1
+
+	for _ = 1, MAX_RETRIES do
+		local Success, Name = pcall(function()
+			return Players:GetNameFromUserIdAsync(UserId)
+		end)
+		if Success then
+			return Name
+		end
+		task.wait(RETRY_DELAY)
+	end
+	return nil
+end
+
 -- // Init
 local LeaderboardManager = {}
 
 function LeaderboardManager:Start()
 	task.wait(3)
-	self:RefreshLeaderboard("Cash")
-	self:RefreshLeaderboard("Steal")
-	while task.wait(REFRESH_INTERVAL) do
+
+	task.spawn(function()
 		self:RefreshLeaderboard("Cash")
+	end)
+	task.spawn(function()
 		self:RefreshLeaderboard("Steal")
+	end)
+	while task.wait(REFRESH_INTERVAL) do
+		task.spawn(function()
+			self:RefreshLeaderboard("Cash")
+		end)
+		task.spawn(function()
+			self:RefreshLeaderboard("Steal")
+		end)
 	end
 end
 
@@ -64,8 +89,12 @@ function LeaderboardManager:RefreshLeaderboard(Name: "Cash" | "Steal")
 
 	for rank, data in leaderboardData do
 		local Template = MainContents.Template:Clone()
+		local PlayerName = GetPlayerName(data.key)
+		if not PlayerName then
+			continue
+		end
 		Template.Name = data.key
-		Template.name.Text = Players:GetNameFromUserIdAsync(data.key)
+		Template.name.Text = PlayerName
 		Template.LayoutOrder = rank
 		Template.place.Text = "#" .. rank
 		Template.amount.Text = FormatNumber(data.value)
