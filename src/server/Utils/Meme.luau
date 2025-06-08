@@ -43,7 +43,7 @@ local function FormatNumber(n)
 	return s .. tostring(NUMBER_SUFFIX[math.floor(d / 3)])
 end
 
-local function GetPlayerBase(Player: Player)
+local function GetPlayerBase(Player: Player): Model
 	for _, Base in BasesFolder:GetChildren() do
 		if Base:GetAttribute("Owner") == Player.Name then
 			return Base
@@ -83,6 +83,7 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo:
 	self.Rarity = Type
 	self.BeingStolen = false
 	self.Redirects = true
+	self.CashConnection = false
 
 	if not self.Model.PrimaryPart then
 		self.Model.PrimaryPart = self.Model.HumanoidRootPart
@@ -161,6 +162,10 @@ function Meme:Steal(StealPlayer: Player)
 		return
 	end
 
+	if not self.PurchasePlayer then
+		return
+	end
+
 	local OriginalPlayer = self.PurchasePlayer
 	local OriginalPlayerBase = GetPlayerBase(OriginalPlayer)
 
@@ -183,6 +188,8 @@ function Meme:Steal(StealPlayer: Player)
 	)
 	self:Cleanup()
 	StealPlayer:SetAttribute("Stealing", true)
+	local OGWalkSpeed = StealPlayer.Character.Humanoid.WalkSpeed
+	StealPlayer.Character.Humanoid.WalkSpeed /= 1.5
 	self.BeingStolen = true
 	Signal.RemoveMemeFromPlayer:Fire(OriginalPlayer, self)
 	pcall(function()
@@ -249,6 +256,7 @@ function Meme:Steal(StealPlayer: Player)
 			self.CurrentStand = OpenSlot
 			TogglePrompt:FireAllClients(self.Prompt, true)
 			self.BeingStolen = false
+			StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
 			smacConn:Disconnect()
 			plrEvent:Disconnect()
 
@@ -299,6 +307,8 @@ function Meme:Steal(StealPlayer: Player)
 			self.BeingStolen = false
 			self:AddToSlot(OpenSlot)
 			DataUtil:IncrementSteals(StealPlayer, 1)
+			StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
+
 			TogglePrompt:FireAllClients(self.Prompt, true)
 		end
 	end)
@@ -338,6 +348,10 @@ function Meme:Steal(StealPlayer: Player)
 end
 
 function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?, value: boolean?)
+	if not self.PurchasePlayer then
+		self.PurchasePlayer = Players:FindFirstChild(Slot.Parent.Parent:GetAttribute("Owner"))
+	end
+
 	self:CleanupConnects()
 	if self.BeingStolen then
 		return
@@ -413,7 +427,7 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	end
 
 	if self.PurchasePlayer:GetAttribute("2xCash") then
-		CollectMultiplier += 2
+		CollectMultiplier *= 2
 	end
 	local TouchDebounce = false
 	table.insert(
@@ -442,16 +456,20 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 			end
 		end)
 	)
-	table.insert(
-		self.Threads,
-		task.spawn(function()
-			while task.wait(1) do
-				self.CurrentEarned += (self.Info.Income * CollectMultiplier)
+	if not self.CashConnection then
+		table.insert(
+			self.Threads,
+			task.spawn(function()
+				self.CashConnection = true
+				while task.wait(1) do
+					self.CurrentEarned += (self.Info.Income * CollectMultiplier)
 
-				CollectButton.Attachment.Billboard.Frame.amount.Text = `${FormatNumber(self.CurrentEarned)}`
-			end
-		end)
-	)
+					CollectButton.Attachment.Billboard.Frame.amount.Text = `${FormatNumber(self.CurrentEarned)}`
+				end
+			end)
+		)
+	end
+
 	self.Prompt.Triggered:Once(function(Player: Player)
 		if Player == self.PurchasePlayer then
 			Signal.IncrementCash:Fire(Player, SellPrice)
@@ -505,7 +523,7 @@ function Meme:SetupConnections()
 
 			if not self:GetOpenSlot(PlayerBase.Slots) then
 				local err = SoundService.Error:Clone()
-				err.Parent = self.Model.PrimaryPart
+				err.Parent = Player.PlayerGui
 				err:Play()
 				err.Ended:Once(function()
 					err:Destroy()

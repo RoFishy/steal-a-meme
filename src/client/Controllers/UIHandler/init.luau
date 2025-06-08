@@ -1,10 +1,10 @@
 -- // Services
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+--local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterGui = game:GetService("StarterGui")
+--local StarterGui = game:GetService("StarterGui")
 
 -- // Player
 local LocalPlayer = Players.LocalPlayer
@@ -84,7 +84,7 @@ local FrameModules = script.Frames
 -- // Constants
 local DEFAULT_FOV = 70
 local ZOOMED_IN_FOV = 50
-local MAX_RETRIES = 8
+--local MAX_RETRIES = 8
 
 -- // Vars
 local Debounce = false
@@ -103,11 +103,11 @@ local function FormatCash(Amount: number): string
 	return formatted
 end
 
-function Format(Int)
+local function Format(Int)
 	return string.format("%02i", Int)
 end
 
-function convertToMS(Seconds)
+local function convertToMS(Seconds)
 	local Minutes = (Seconds - Seconds % 60) / 60
 	Seconds = Seconds - Minutes * 60
 	local Hours = (Minutes - Minutes % 60) / 60
@@ -115,6 +115,7 @@ function convertToMS(Seconds)
 	return Format(Minutes) .. ":" .. Format(Seconds)
 end
 
+--[[
 function coreCall(method, ...)
 	local result = {}
 	for _ = 1, MAX_RETRIES do
@@ -126,6 +127,8 @@ function coreCall(method, ...)
 	end
 	return unpack(result)
 end
+]]
+--
 
 -- // Init
 local UIHandler = {}
@@ -146,7 +149,7 @@ function UIHandler.Init()
 end
 
 function UIHandler:Start()
-	coreCall("SetCore", "ResetButtonCallback", false)
+	--coreCall("SetCore", "ResetButtonCallback", false)
 
 	-- // signals
 	Signals.ToggleNPCDialogue:Connect(function(Options: Types.NPCDialogueOptions)

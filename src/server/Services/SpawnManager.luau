@@ -32,12 +32,11 @@ local GuaranteedRequirements = {
 }
 
 -- // Const
-local SPAWN_INTERVAL = 4
+local SPAWN_INTERVAL = 5
 
 -- // Variables
 local CurrentMemes = {}
 local CurrentServerLuck = 1
-local CurrentRarity = nil
 
 -- // local function
 local function IndexDictionary(Dictionary, Index)
@@ -83,6 +82,7 @@ local SpawnManager = {}
 
 function SpawnManager.Init()
 	SpawnManager.Sum = 0
+	SpawnManager.CurrentRarity = nil
 
 	for _, v in pairs(Spawns) do
 		SpawnManager.Sum += v.Rarity
@@ -121,8 +121,8 @@ function SpawnManager:Start()
 				TextLabel.Text = `Guaranteed {Name} dropping NOW!`
 				repeat
 					task.wait()
-				until not CurrentRarity
-				CurrentRarity = Name
+				until not self.CurrentRarity
+				self.CurrentRarity = Name
 				task.wait(2)
 				Time = DropTime
 			end
@@ -130,8 +130,8 @@ function SpawnManager:Start()
 	end
 
 	while task.wait(SPAWN_INTERVAL) do
-		local Rarity = CurrentRarity or self:GetRandomRarity(CurrentServerLuck)
-		CurrentRarity = nil
+		local Rarity = self.CurrentRarity or self:GetRandomRarity(CurrentServerLuck)
+		self.CurrentRarity = nil
 		--local Rarity = "Common"
 		local RandomSpawn =
 			IndexDictionary(Spawns[Rarity]["Spawns"], math.random(1, GetDictionaryLength(Spawns[Rarity]["Spawns"])))

@@ -1,5 +1,5 @@
 return {
-	Name = "assignBlot",
+	Name = "assignBase",
 	Aliases = {},
 	Description = "Assigns a base to a player",
 	Args = {

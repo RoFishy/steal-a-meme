@@ -24,7 +24,7 @@ local BasesFolder = workspace.Bases
 local Floor = workspace.Floor
 
 -- // Constants
-local LOCK_COOLDOWN = 30
+--local LOCK_COOLDOWN = 30
 local BYPASS_COOLDOWN_PRODUCT = Products.BypassLockCooldown.ProductId
 
 -- // Module
@@ -174,7 +174,8 @@ function BaseManager:UnlockBase(Base: string)
 
 	local Components = Base.Components
 	local Locks = Components.Lock
-	self.Bases[Base.Name].CooldownThread = task.spawn(function()
+	--[[
+		self.Bases[Base.Name].CooldownThread = task.spawn(function()
 		for i = LOCK_COOLDOWN, 0, -1 do
 			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Text = `Cooldown: {i}`
 			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = `Cooldown: {i}`
@@ -183,7 +184,10 @@ function BaseManager:UnlockBase(Base: string)
 		Components.LockButton.Attachment.Billboard.Frame.TextUpper.Text = "Lock Base"
 		Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = "Lock Base"
 	end)
-
+	]]
+	--
+	Components.LockButton.Attachment.Billboard.Frame.TextUpper.Text = "Lock Base"
+	Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = "Lock Base"
 	Locks.Wall.CanCollide = false
 	for _, Lock in Locks:GetDescendants() do
 		if Lock:IsA("BasePart") then
@@ -249,7 +253,8 @@ function BaseManager:AssignBase(Player: Player, Base: string)
 end
 
 function BaseManager:TeleportPlayerToBase(Player: Player, Base: string?)
-	Base = BasesFolder[Base] or BasesFolder[self:GetBaseNameFromPlayer(Player)]
+	Base = Base or self:GetBaseNameFromPlayer(Player)
+	Base = BasesFolder[Base]
 
 	local Components = Base.Components
 	local SpawnPart = Components.SpawnPart
@@ -300,7 +305,11 @@ function BaseManager:ResetBase(Base: string)
 		for _, _Meme in workspace:GetChildren() do
 			if _Meme.Name == Name then
 				if _Meme:GetAttribute("ID") == ID then
-					_Meme:Destroy()
+					task.spawn(function()
+						pcall(function()
+							_Meme:Destroy()
+						end)
+					end)
 				end
 			end
 		end

@@ -2,6 +2,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local BadgeService = game:GetService("BadgeService")
+local ServerStorage = game:GetService("ServerStorage")
 
 -- // managers
 local BaseManager = require(script.Parent.BaseManager)
@@ -16,6 +17,9 @@ local TutorialUtil = require(Utils.TutorialUtil)
 -- // Packages
 local Packages = ReplicatedStorage.Packages
 local Replica = require(Packages.Replica)
+
+-- // folder
+local ItemTools = ServerStorage.ItemTools
 
 -- // const
 local JOIN_BADGES = {
@@ -43,6 +47,37 @@ function PlayerManager:Start()
 		for _, BadgeId in JOIN_BADGES do
 			BadgeService:AwardBadge(Player.UserId, BadgeId)
 		end
+
+		local character
+
+		local con
+
+		local function Reconnect()
+			character = Player.Character or Player.CharacterAdded:Wait()
+			con = character:WaitForChild("Humanoid").Died:Connect(function()
+				for _, item in ipairs(Player.Backpack:GetChildren()) do
+					if item:IsA("Tool") and item.Name ~= "DefaultBat" then
+						local PlayerItemFolder = ItemTools:FindFirstChild(Player.Name) or Instance.new("Folder")
+						PlayerItemFolder.Parent = ItemTools
+						PlayerItemFolder.Name = Player.Name
+						item:Clone().Parent = PlayerItemFolder
+					end
+				end
+			end)
+		end
+
+		Reconnect()
+
+		Player.CharacterAdded:Connect(function()
+			for _, item in ItemTools[Player.Name]:GetChildren() do
+				item.Parent = Player:WaitForChild("Backpack")
+			end
+
+			con:Disconnect()
+			Reconnect()
+
+			BaseManager:TeleportPlayerToBase(Player)
+		end)
 	end)
 	Players.PlayerRemoving:Connect(function(Player)
 		local Base = BaseManager:GetBaseNameFromPlayer(Player)
