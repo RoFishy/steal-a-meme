@@ -232,7 +232,6 @@ function DataUtil:CalculateOfflineEarnings(Player: Player, MemeObj): number?
 		local LastJoin = Profile.Data.LastJoin
 		if LastJoin then
 			local Time = tick() - LastJoin
-			print(Time)
 			local Income = MemeObj.Info.Income * Time
 
 			return math.abs(Income)
@@ -244,7 +243,6 @@ end
 function DataUtil:RemoveMemeFromPlayer(Player: Player, MemeObj)
 	local Profile = Profiles[Player]
 	if Profile then
-		print("STEALIN - REMOVE FROM PLAYER!")
 		Profile.Data.Slots[MemeObj.Model:GetAttribute("ID")] = nil
 	end
 end

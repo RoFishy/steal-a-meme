@@ -82,6 +82,7 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo:
 	self.CurrentMove = nil
 	self.Rarity = Type
 	self.BeingStolen = false
+	self.Redirects = true
 
 	if not self.Model.PrimaryPart then
 		self.Model.PrimaryPart = self.Model.HumanoidRootPart
@@ -161,12 +162,19 @@ function Meme:Steal(StealPlayer: Player)
 	end
 
 	local OriginalPlayer = self.PurchasePlayer
+	local OriginalPlayerBase = GetPlayerBase(OriginalPlayer)
 
 	if StealPlayer:GetAttribute("Stealing") then
-		print("He's already a dirty thief gang")
 		ShowNotification:FireClient(StealPlayer, "You're already stealing a meme!")
 		return
 	end
+
+	local StealSound = SoundService.Steal:Clone()
+	StealSound.Parent = self.Model.HumanoidRootPart
+	StealSound:Play()
+	StealSound.Ended:Once(function()
+		StealSound:Destroy()
+	end)
 
 	ShowNotification:FireClient(
 		self.PurchasePlayer,
@@ -219,6 +227,13 @@ function Meme:Steal(StealPlayer: Player)
 			self.PurchasePlayer = OriginalPlayer
 			StealPlayer:SetAttribute("Stealing", nil)
 
+			local Sound = SoundService.Bruh:Clone()
+			Sound.Parent = self.Model.HumanoidRootPart
+			Sound:Play()
+			Sound.Ended:Once(function()
+				Sound:Destroy()
+			end)
+
 			local PurchasePlayerBase = GetPlayerBase(OriginalPlayer)
 			local Slots = PurchasePlayerBase.Slots
 			local OpenSlot = self:GetOpenSlot(Slots)
@@ -268,7 +283,6 @@ function Meme:Steal(StealPlayer: Player)
 				return
 			end
 			OpenSlot:SetAttribute("Meme", self.Name)
-			print(OpenSlot)
 
 			self.PurchasePlayer = StealPlayer
 			self.CurrentStand = OpenSlot
@@ -296,29 +310,28 @@ function Meme:Steal(StealPlayer: Player)
 			end)
 			smacConn:Disconnect()
 
-			local DataUtil = require(Utils.DataUtil)
-			StealPlayer:SetAttribute("Stealing", nil)
+			--StealPlayer:SetAttribute("Stealing", nil)
 
-			local Slots = StealPlayerBase.Slots
+			local Slots = OriginalPlayerBase.Slots
 			local OpenSlot = self:GetOpenSlot(Slots)
 			if not OpenSlot then
 				return
 			end
 			OpenSlot:SetAttribute("Meme", self.Name)
-			print(OpenSlot)
 
-			self.PurchasePlayer = StealPlayer
+			self.PurchasePlayer = OriginalPlayer
 			self.CurrentStand = OpenSlot
 			for _, Part: BasePart in self.Model:GetChildren() do
 				if not Part:IsA("BasePart") then
 					continue
 				end
+				Part.Anchored = true
 				Part.CanCollide = true
 			end
 			Weld:Destroy()
 			self.BeingStolen = false
 			self:AddToSlot(OpenSlot)
-			DataUtil:IncrementSteals(StealPlayer, 1)
+			--DataUtil:IncrementSteals(StealPlayer, 1)
 			TogglePrompt:FireAllClients(self.Prompt, true)
 		end
 	end)
@@ -335,6 +348,15 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	if LoadData == nil then
 		Signal.AddMemeToPlayer:Fire(self.PurchasePlayer, self)
 	end
+	for _, Part in self.Model:GetChildren() do
+		if not Part:IsA("BasePart") then
+			continue
+		end
+		Part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+		Part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+		Part.Anchored = false
+	end
+
 	self.Model:PivotTo((Slot.Stand.CFrame + Vector3.new(0, 5, 0)) * CFrame.fromEulerAngles(0, math.rad(-90), 0))
 
 	task.delay(0.5, function()
@@ -405,7 +427,7 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 				end)
 				task.spawn(function()
 					local Sound = SoundService.CashCollect:Clone()
-					Sound.Parent = CollectButton
+					Sound.Parent = Player.PlayerGui
 					Sound:Play()
 					Sound.Ended:Once(function()
 						Sound:Destroy()
@@ -454,7 +476,6 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 end
 
 function Meme:SetupConnections()
-	print("Setup connectsion: " .. self.Name)
 	local ProximityPrompt = self:GetNewPrompt()
 	ProximityPrompt.ActionText = "Buy"
 	ProximityPrompt.ObjectText = self.Name .. " $" .. self.Info.Price
@@ -465,10 +486,17 @@ function Meme:SetupConnections()
 	table.insert(
 		self.Connections,
 		ProximityPrompt.Triggered:Connect(function(Player: Player)
+			local BeingRedirected = false
 			if self.PurchasePlayer then
-				TogglePrompt:FireAllClients(ProximityPrompt, true)
-				self.CurrentStand:SetAttribute("Meme", nil)
-				humConnect:Disconnect()
+				if self.Redirects then
+					BeingRedirected = true
+					TogglePrompt:FireAllClients(ProximityPrompt, true)
+					self.CurrentStand:SetAttribute("Meme", nil)
+					humConnect:Disconnect()
+				else
+					ShowNotification:FireClient(Player, "This meme is not able to be redirected!")
+					return
+				end
 				--self.CurrentStand:SetAttribute("Meme", nil)
 			end
 			local Cash = Player.leaderstats.Cash.Value
@@ -493,29 +521,65 @@ function Meme:SetupConnections()
 				Signal.IncrementCash:Fire(Player, -self.Info.Price)
 
 				TogglePrompt:FireClient(Player, ProximityPrompt, false)
-				local sound = SoundService.Success:Clone()
-				sound.Parent = Player.PlayerGui
-				sound:Play()
-				sound.Ended:Once(function()
-					sound:Destroy()
-				end)
+
+				if BeingRedirected then
+					local Sound = SoundService.Nope:Clone()
+					Sound.Parent = self.Model.HumanoidRootPart
+					Sound:Play()
+					Sound.Ended:Once(function()
+						Sound:Destroy()
+					end)
+				else
+					local sound = SoundService.Success:Clone()
+					sound.Parent = Player.PlayerGui
+					sound:Play()
+					sound.Ended:Once(function()
+						sound:Destroy()
+					end)
+				end
 
 				self.Model.Humanoid.WalkSpeed = 10
-				self:MoveTo(PlayerBase.Components.CollectZone.CollectPart.Position)
+				self:MoveTo(PlayerBase.Components.CollectZone.CollectPart.PrimaryPart.Position)
 				self.PurchasePlayer = Player
-				print("setup hum connect")
 
-				humConnect = PlayerBase.Components.CollectZone.CollectPart.Touched:Connect(function(Hit: Part)
-					if Hit.Parent == self.Model then
-						print("I should be able to purchase you...")
+				local CollectZone = ZonePlus.new(PlayerBase.Components.CollectZone.CollectPart)
+
+				CollectZone.itemEntered:Connect(function(item)
+					if item.Parent == self.Model or item == self.Model then
+						if Player.Parent ~= Players then
+							self:Destroy()
+							return
+						end
 						task.cancel(self.CurrentMove)
-						print("cancelled")
 						self.CurrentStand = OpenSlot
 						self:AddToSlot(OpenSlot)
 						humConnect:Disconnect()
-						print("added")
 					end
 				end)
+				CollectZone:trackItem(self.Model)
+				for _, part in self.Model:GetChildren() do
+					if not part:IsA("BasePart") then
+						continue
+					end
+					CollectZone:trackItem(part)
+				end
+
+				humConnect = {
+					Disconnect = function()
+						CollectZone:destroy()
+					end,
+				}
+				--[[
+								humConnect = PlayerBase.Components.CollectZone.CollectPart.Touched:Connect(function(Hit: Part)
+					if Hit.Parent == self.Model then
+						task.cancel(self.CurrentMove)
+						self.CurrentStand = OpenSlot
+						self:AddToSlot(OpenSlot)
+						humConnect:Disconnect()
+					end
+				end)
+				]]
+				--
 			else
 				local err = SoundService.Error:Clone()
 				err.Parent = self.Model.PrimaryPart

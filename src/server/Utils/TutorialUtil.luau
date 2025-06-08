@@ -26,6 +26,7 @@ function TutorialUtil.new(Player: Player)
 		Noob = TutorialUtil:GetNoob()
 	until Noob ~= nil
 	local Model = Noob.Model
+	Noob.Redirects = false
 	ShowTutorialFrame:FireClient(Player, `Buy a {Noob.Name} from the conveyor!`)
 	ShowBeam:FireClient(Player, Player.Character.HumanoidRootPart, Model.HumanoidRootPart)
 

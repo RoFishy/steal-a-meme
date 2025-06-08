@@ -204,13 +204,13 @@ function BaseManager:GetEmptyBaseName(): string
 	return nil
 end
 
-function BaseManager:AssignBase(Player: Player)
+function BaseManager:AssignBase(Player: Player, Base: string)
 	self.Junk[Player] = {}
 	if self:GetBaseNameFromPlayer(Player) then
 		return
 	end
 
-	local BaseName = self:GetEmptyBaseName()
+	local BaseName = Base or self:GetEmptyBaseName()
 	assert(BaseName, "No available bases! (Server size limit too high?)")
 
 	self.Bases[BaseName].Owner = Player
