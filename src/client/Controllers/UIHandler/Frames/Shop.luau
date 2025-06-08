@@ -20,8 +20,8 @@ local UIManager = require(script.Parent.Parent)
 
 -- // Const
 local SPECIAL_CANVAS_POSITION = Vector2.new(0, 0)
-local GEARS_CANVAS_POSITION = Vector2.new(0, 305)
-local PASSES_CANVAS_POSITION = Vector2.new(0, 600)
+local GEARS_CANVAS_POSITION = Vector2.new(0, 300)
+local PASSES_CANVAS_POSITION = Vector2.new(0, 580)
 local MONEY_CANVAS_POSITION = Vector2.new(0, 1055.574)
 
 -- // Luck stuff

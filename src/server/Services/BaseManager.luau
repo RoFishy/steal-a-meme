@@ -82,7 +82,7 @@ function BaseManager:Start()
 				local LockTime = DataUtil:GetData(Player).LockTime
 				local BaseData = self.Bases[Base.Name]
 				if BaseData.Owner and BaseData.Owner == Player then
-					if BaseData.Locked then
+					if BaseData.Locked == true then
 						return
 					end
 					if LockButton.Attachment.Billboard.Frame.TextUpper.Text ~= "Lock Base" then -- its o n cooldown
@@ -259,6 +259,9 @@ function BaseManager:TeleportPlayerToBase(Player: Player, Base: string?)
 end
 
 function BaseManager:ResetBase(Base: string)
+	if BaseManager.Bases[Base].Locked then
+		self:UnlockBase(Base)
+	end
 	local DataUtil = require(Utils.DataUtil)
 
 	local CurrentMemes = DataUtil:GetCurrentMemes(self.Bases[Base].Owner)
@@ -278,6 +281,13 @@ function BaseManager:ResetBase(Base: string)
 	local CashMultiText = Components.CashMulti.Attachment.Billboard.Frame.TextLow
 
 	CashMultiText.Text = "Cash Multiplier: 1x"
+
+	for _, Slot in Base.Slots:GetChildren() do
+		local collectAt = Slot.Collect.Attachment
+		local offlineAt = Slot.Collect.OfflineAttachment
+		offlineAt.Billboard.Frame.Visible = false
+		collectAt.Billboard.Frame.amount.Text = "$0"
+	end
 
 	SignGui:FindFirstChildOfClass("TextLabel").Text = `Unclaimed Base`
 	if not CurrentMemes then

@@ -54,8 +54,8 @@ function DataUtil.new(Player: Player)
 			return Player.Parent ~= Players
 		end,
 	})
-
 	if Profile ~= nil then
+		print("theres a profile gang!")
 		Profile:AddUserId(Player.UserId)
 		Profile:Reconcile()
 
@@ -163,6 +163,13 @@ function DataUtil:SetFreePetClaimed(Player: Player)
 	end
 end
 
+function DataUtil:SetVIPPetClaimed(Player: Player)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.ClaimedVIPPet = true
+	end
+end
+
 function DataUtil:IncrementLockTime(Player: Player, Amount: number)
 	local Profile = Profiles[Player]
 	if Profile then
@@ -225,9 +232,10 @@ function DataUtil:CalculateOfflineEarnings(Player: Player, MemeObj): number?
 		local LastJoin = Profile.Data.LastJoin
 		if LastJoin then
 			local Time = tick() - LastJoin
+			print(Time)
 			local Income = MemeObj.Info.Income * Time
 
-			return Income
+			return math.abs(Income)
 		end
 	end
 	return nil
@@ -236,6 +244,7 @@ end
 function DataUtil:RemoveMemeFromPlayer(Player: Player, MemeObj)
 	local Profile = Profiles[Player]
 	if Profile then
+		print("STEALIN - REMOVE FROM PLAYER!")
 		Profile.Data.Slots[MemeObj.Model:GetAttribute("ID")] = nil
 	end
 end
@@ -257,15 +266,15 @@ end
 
 function DataUtil:CleanupProfile(Player: Player)
 	if Profiles[Player] then
-		for _, Slot in Profiles[Player].Data.Slots do
+		for ID, Slot in Profiles[Player].Data.Slots do
 			if Slot.Model then
-				Slot.Model = nil
+				Profiles[Player].Data.Slots[ID].Model = nil
 			end
 		end
 		task.spawn(function()
 			local data = Profiles[Player].Data
-			CashOrderedDS:SetAsync(Player.UserId, data.Cash)
-			StealsOrderedDS:SetAsync(Player.UserId, data.Steals)
+			CashOrderedDS:SetAsync(Player.UserId, math.ceil(data.Cash))
+			StealsOrderedDS:SetAsync(Player.UserId, math.ceil(data.Steals))
 		end)
 		Profiles[Player].Data.LastJoin = tick()
 		Profiles[Player].Data.NewPlayer = false

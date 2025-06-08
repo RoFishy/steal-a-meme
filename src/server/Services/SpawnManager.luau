@@ -32,7 +32,7 @@ local GuaranteedRequirements = {
 }
 
 -- // Const
-local SPAWN_INTERVAL = 3
+local SPAWN_INTERVAL = 4
 
 -- // Variables
 local CurrentMemes = {}

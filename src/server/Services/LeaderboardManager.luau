@@ -64,6 +64,7 @@ function LeaderboardManager:RefreshLeaderboard(Name: "Cash" | "Steal")
 
 	for rank, data in leaderboardData do
 		local Template = MainContents.Template:Clone()
+		Template.Name = data.key
 		Template.name.Text = Players:GetNameFromUserIdAsync(data.key)
 		Template.LayoutOrder = rank
 		Template.place.Text = "#" .. rank

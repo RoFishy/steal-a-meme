@@ -13,6 +13,15 @@ local Rebirths = require(Modules.Rebirths)
 local Utils = script.Parent.Parent.Utils
 local DataUtil = require(Utils.DataUtil)
 
+-- // local fn
+local function GetPlayerBase(Player: Player)
+	for _, Base in workspace.Bases:GetChildren() do
+		if Base:GetAttribute("Owner") == Player.Name then
+			return Base
+		end
+	end
+end
+
 -- // Init
 local RebirthManager = {}
 
@@ -26,10 +35,15 @@ function RebirthManager:Start()
 			DataUtil:IncrementRebirths(Player, 1)
 
 			local CurrentMemes = DataUtil:GetCurrentMemes(Player)
-			print(CurrentMemes)
 			for _, Meme in CurrentMemes do
 				DataUtil:RemoveMemeFromPlayer(Player, Meme)
 				Meme.Model:Destroy()
+			end
+			for _, slot in GetPlayerBase(Player).Slots:GetChildren() do
+				local collectAt = slot.Collect.Attachment
+				local offlineAt = slot.Collect.OfflineAttachment
+				offlineAt.Billboard.Frame.Visible = false
+				collectAt.Billboard.Frame.amount.Text = "$0"
 			end
 		end
 	end)

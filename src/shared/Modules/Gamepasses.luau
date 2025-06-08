@@ -36,7 +36,7 @@ return {
 		Callback = function(Player: Player)
 			local hdMain = require(game:GetService("ReplicatedStorage"):WaitForChild("HDAdminSetup")):GetMain()
 			local hd = hdMain:GetModule("API")
-			local rank = "VIP"
+			local rank = "Mod"
 			local rankType = "Server"
 			local rankId = tonumber(rank) or hd:GetRankId(rank)
 
@@ -103,12 +103,16 @@ return {
 			if not OpenSlot then
 				return
 			end
-			local _meme = Meme.new("John Pork", "Legendary", CFrame.new(0, 0, 0))
-			_meme.Model:SetAttribute("ID", game:GetService("HttpService"):GenerateGUID(false))
-			_meme.PurchasePlayer = Player
-			_meme.CurrentStand = OpenSlot
-			task.cancel(_meme.CurrentMove)
-			_meme:AddToSlot(OpenSlot)
+			local data = dataUtil:GetData(Player)
+			if data.ClaimedVIPPet ~= true then
+				local _meme = Meme.new("John Pork", "Legendary", CFrame.new(0, 0, 0))
+				_meme.Model:SetAttribute("ID", game:GetService("HttpService"):GenerateGUID(false))
+				_meme.PurchasePlayer = Player
+				_meme.CurrentStand = OpenSlot
+				task.cancel(_meme.CurrentMove)
+				_meme:AddToSlot(OpenSlot)
+				dataUtil:SetVIPPetClaimed(Player)
+			end
 		end,
 	},
 }

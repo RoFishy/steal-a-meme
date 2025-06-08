@@ -160,9 +160,6 @@ function UIHandler:Start()
 			table.insert(UIStrokes, Child)
 		end
 	end)
-	RunService.RenderStepped:Connect(function()
-		self:HandleUIStroke()
-	end)
 
 	-- // Frames initializer
 	for _, FrameModule in FrameModules:GetChildren() do
@@ -248,6 +245,9 @@ function UIHandler:Start()
 			Music.Volume = 0.3
 		end
 	end)
+
+	-- // e
+	self:HandleUIStroke()
 end
 
 function UIHandler:ToggleNPCDialogue(Options: Types.NPCDialogueOptions)

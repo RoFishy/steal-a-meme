@@ -5,6 +5,7 @@ export type UserData = {
 	Index: {},
 	NewPlayer: boolean,
 	ClaimedFreePet: boolean,
+	ClaimedVIPPet: boolean,
 }
 
 export type MemeSpawn = {
