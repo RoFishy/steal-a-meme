@@ -9,7 +9,6 @@ local ShowBeam = Remotes.ShowBeam
 local HideBeam = Remotes.HideBeam
 
 -- // Managers
-local SpawnManager = require(script.Parent.Parent.Services.SpawnManager)
 local BaseManager = require(script.Parent.Parent.Services.BaseManager)
 
 -- // Signals
@@ -20,15 +19,8 @@ local Signals = require(Utils.Signals)
 local TutorialUtil = {}
 
 function TutorialUtil.new(Player: Player)
-	local Noob
-	repeat
-		task.wait()
-		Noob = TutorialUtil:GetNoob()
-	until Noob ~= nil
-	local Model = Noob.Model
-	Noob.Redirects = false
-	ShowTutorialFrame:FireClient(Player, `Buy a {Noob.Name} from the conveyor!`)
-	ShowBeam:FireClient(Player, Player.Character.HumanoidRootPart, Model.HumanoidRootPart)
+	ShowTutorialFrame:FireClient(Player, `Buy a Meme from the conveyor!`)
+	ShowBeam:FireClient(Player, Player.Character.HumanoidRootPart, workspace.ConveyorSystem.Spawn)
 
 	local oneDone = false
 
@@ -44,17 +36,17 @@ function TutorialUtil.new(Player: Player)
 		task.wait()
 	until oneDone
 
-	task.wait(3)
+	task.wait(1.5)
 
 	local PlayerBase = BaseManager:GetBaseNameFromPlayer(Player)
 	local twoDone = false
 	local NoobSlot
 	for _, Slot in workspace.Bases[PlayerBase].Slots:GetChildren() do
-		if Slot:GetAttribute("Meme") == "Noob" then
+		if Slot:GetAttribute("Meme") then
 			NoobSlot = Slot
 		end
 	end
-	ShowTutorialFrame:FireClient(Player, `Collect your cash from the {Noob.Name}!`)
+	ShowTutorialFrame:FireClient(Player, `Collect your cash from the Meme!`)
 	ShowBeam:FireClient(Player, Player.Character.HumanoidRootPart, NoobSlot.Collect)
 
 	Signals.PlayerCollectedCash:Connect(function(_Player: Player)
@@ -68,21 +60,12 @@ function TutorialUtil.new(Player: Player)
 	repeat
 		task.wait()
 	until twoDone
-	task.wait(3)
+	task.wait(1.5)
 
 	ShowTutorialFrame:FireClient(
 		Player,
 		"That's all for this tutorial! Go steal from others, collect cash, and have fun!"
 	)
-end
-
-function TutorialUtil:GetNoob()
-	for _, Spawns in SpawnManager:GetCurrentMemes() do
-		if Spawns.Name == "Noob" or Spawns.Name == "Among Us" or Spawns.Name == "Troll Face" then
-			return Spawns
-		end
-	end
-	return nil
 end
 
 return TutorialUtil

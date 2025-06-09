@@ -226,43 +226,42 @@ function Meme:Steal(StealPlayer: Player)
 	local BaseCollectZone = BaseComponents.CollectZone.CollectPart
 
 	local CollectZone = ZonePlus.new(BaseCollectZone)
-	local plrEvent
 
-	local smacConn
-	smacConn = SmackPlayer.Event:Connect(function(_: Player, OtherPlayer: Player)
-		if OtherPlayer == StealPlayer then
-			self.PurchasePlayer = OriginalPlayer
-			StealPlayer:SetAttribute("Stealing", nil)
+	table.insert(
+		self.Connections,
+		SmackPlayer.Event:Connect(function(_: Player, OtherPlayer: Player)
+			if OtherPlayer == StealPlayer then
+				self.PurchasePlayer = OriginalPlayer
+				StealPlayer:SetAttribute("Stealing", nil)
 
-			local Sound = SoundService.Bruh:Clone()
-			Sound.Parent = self.Model.HumanoidRootPart
-			Sound:Play()
-			Sound.Ended:Once(function()
-				Sound:Destroy()
-			end)
+				local Sound = SoundService.Bruh:Clone()
+				Sound.Parent = self.Model.HumanoidRootPart
+				Sound:Play()
+				Sound.Ended:Once(function()
+					Sound:Destroy()
+				end)
 
-			local PurchasePlayerBase = GetPlayerBase(OriginalPlayer)
-			local Slots = PurchasePlayerBase.Slots
-			local OpenSlot = self:GetOpenSlot(Slots)
-			OpenSlot:SetAttribute("Meme", self.Name)
-			for _, Part: BasePart in self.Model:GetChildren() do
-				if not Part:IsA("BasePart") then
-					continue
+				local PurchasePlayerBase = GetPlayerBase(OriginalPlayer)
+				local Slots = PurchasePlayerBase.Slots
+				local OpenSlot = self:GetOpenSlot(Slots)
+				OpenSlot:SetAttribute("Meme", self.Name)
+				for _, Part: BasePart in self.Model:GetChildren() do
+					if not Part:IsA("BasePart") then
+						continue
+					end
+					Part.CanCollide = true
+					Part.Anchored = true
 				end
-				Part.CanCollide = true
-				Part.Anchored = true
-			end
-			Weld:Destroy()
-			self.CurrentStand = OpenSlot
-			TogglePrompt:FireAllClients(self.Prompt, true)
-			self.BeingStolen = false
-			StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
-			smacConn:Disconnect()
-			plrEvent:Disconnect()
+				Weld:Destroy()
+				self.CurrentStand = OpenSlot
+				TogglePrompt:FireAllClients(self.Prompt, true)
+				self.BeingStolen = false
+				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
 
-			self:AddToSlot(OpenSlot)
-		end
-	end)
+				self:AddToSlot(OpenSlot)
+			end
+		end)
+	)
 
 	--local db = false
 	table.insert(self.Connections, {
@@ -279,8 +278,6 @@ function Meme:Steal(StealPlayer: Player)
 			pcall(function()
 				EditPrompt:FireAllClients("Steal", self.Name)
 			end)
-			smacConn:Disconnect()
-			plrEvent:Disconnect()
 
 			local DataUtil = require(Utils.DataUtil)
 			StealPlayer:SetAttribute("Stealing", nil)
@@ -313,14 +310,46 @@ function Meme:Steal(StealPlayer: Player)
 		end
 	end)
 
-	plrEvent = Players.PlayerRemoving:Connect(function(player)
-		if player == StealPlayer then
+	table.insert(
+		self.Connections,
+		Players.PlayerRemoving:Connect(function(player)
+			if player == StealPlayer then
+				pcall(function()
+					EditPrompt:FireAllClients("Steal", self.Name)
+				end)
+
+				local Slots = OriginalPlayerBase.Slots
+				local OpenSlot = self:GetOpenSlot(Slots)
+				if not OpenSlot then
+					return
+				end
+				OpenSlot:SetAttribute("Meme", self.Name)
+
+				self.PurchasePlayer = OriginalPlayer
+				self.CurrentStand = OpenSlot
+				for _, Part: BasePart in self.Model:GetChildren() do
+					if not Part:IsA("BasePart") then
+						continue
+					end
+					Part.Anchored = true
+					Part.CanCollide = true
+				end
+				Weld:Destroy()
+				self.BeingStolen = false
+				self:AddToSlot(OpenSlot)
+				TogglePrompt:FireAllClients(self.Prompt, true)
+			end
+		end)
+	)
+
+	table.insert(
+		self.Connections,
+		StealPlayer.Character.Humanoid.Died:Connect(function()
 			pcall(function()
 				EditPrompt:FireAllClients("Steal", self.Name)
 			end)
-			smacConn:Disconnect()
 
-			--StealPlayer:SetAttribute("Stealing", nil)
+			StealPlayer:SetAttribute("Stealing", nil)
 
 			local Slots = OriginalPlayerBase.Slots
 			local OpenSlot = self:GetOpenSlot(Slots)
@@ -341,10 +370,9 @@ function Meme:Steal(StealPlayer: Player)
 			Weld:Destroy()
 			self.BeingStolen = false
 			self:AddToSlot(OpenSlot)
-			--DataUtil:IncrementSteals(StealPlayer, 1)
 			TogglePrompt:FireAllClients(self.Prompt, true)
-		end
-	end)
+		end)
+	)
 end
 
 function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?, value: boolean?)
@@ -661,12 +689,15 @@ function Meme:CleanupConnects()
 end
 
 function Meme:Cleanup()
-	task.cancel(self.CurrentMove)
+	pcall(function()
+		task.cancel(self.CurrentMove)
+	end)
 	if self.PurchasePlayer then
 		self.PurchasePlayer = nil
 		self.CurrentStand:SetAttribute("Meme", nil)
 		local CollectButton = self.CurrentStand.Collect
 		CollectButton.Attachment.Billboard.Frame.amount.Text = `$0`
+		CollectButton.OfflineAttachment.Billboard.Frame.Visible = false
 
 		self.CurrentStand = nil
 		self.CurrentEarned = 0
