@@ -485,6 +485,7 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 			if Player:GetAttribute("Stealing") then
 				return
 			else
+				self.CashConnection = false
 				self:Steal(Player)
 			end
 		end

@@ -234,7 +234,7 @@ function DataUtil:CalculateOfflineEarnings(Player: Player, MemeObj): number?
 			local Time = tick() - LastJoin
 			local Income = MemeObj.Info.Income * Time
 
-			return math.abs(Income)
+			return math.abs(math.ceil(Income / 2))
 		end
 	end
 	return nil
