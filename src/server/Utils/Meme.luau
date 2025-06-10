@@ -189,7 +189,7 @@ function Meme:Steal(StealPlayer: Player)
 	self:Cleanup()
 	StealPlayer:SetAttribute("Stealing", true)
 	local OGWalkSpeed = StealPlayer.Character.Humanoid.WalkSpeed
-	StealPlayer.Character.Humanoid.WalkSpeed /= 1.5
+	StealPlayer.Character.Humanoid.WalkSpeed *= 0.8
 	self.BeingStolen = true
 	Signal.RemoveMemeFromPlayer:Fire(OriginalPlayer, self)
 	pcall(function()
@@ -423,7 +423,7 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	end
 	self.Prompt.ObjectText = self.Name
 	self.Prompt.ActionText = "Steal"
-	self.Prompt.HoldDuration = 3
+	self.Prompt.HoldDuration = 2
 	if LoadData then
 		task.delay(5, function()
 			EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
@@ -526,36 +526,12 @@ function Meme:SetupConnections()
 	local ProximityPrompt = self:GetNewPrompt()
 	ProximityPrompt.ActionText = "Buy"
 	ProximityPrompt.ObjectText = self.Name .. " $" .. self.Info.Price
-	ProximityPrompt.HoldDuration = 0.5
+	ProximityPrompt.HoldDuration = 0.25
 
 	self.Prompt = ProximityPrompt
 	local humConnect
 
 	self.CurrentPos = nil
-	table.insert(
-		self.Threads,
-		task.spawn(function()
-			while task.wait(3) do
-				if not self.CurrentPos then
-					self.CurrentPos = self.Model.HumanoidRootPart.Position
-					continue
-				end
-				if self.CurrentStand then
-					local CollectZone = self.CurrentStand.Parent.Parent.Components.CollectZone.CollectPart.PrimaryPart
-					if (self.Model.HumanoidRootPart.Position - CollectZone.Position).magnitude < 3 then
-						if (self.Model.HumanoidRootPart.Position - self.CurrentPos).magnitude > 1 then
-							self.CurrentPos = self.Model.HumanoidRootPart.Position
-							continue
-						end
-						self:AddToSlot(self.CurrentStand)
-						humConnect:Disconnect()
-						continue
-					end
-				end
-			end
-		end)
-	)
-
 	table.insert(
 		self.Connections,
 		ProximityPrompt.Triggered:Connect(function(Player: Player)
@@ -571,6 +547,32 @@ function Meme:SetupConnections()
 					return
 				end
 				--self.CurrentStand:SetAttribute("Meme", nil)
+			else
+				table.insert(
+					self.Threads,
+					task.spawn(function()
+						task.wait(1)
+						while task.wait(2) do
+							if not self.CurrentPos then
+								self.CurrentPos = self.Model.HumanoidRootPart.Position
+								continue
+							end
+							if self.CurrentStand then
+								local CollectZone =
+									self.CurrentStand.Parent.Parent.Components.CollectZone.CollectPart.PrimaryPart
+								if (self.Model.HumanoidRootPart.Position - CollectZone.Position).magnitude < 3 then
+									if (self.Model.HumanoidRootPart.Position - self.CurrentPos).magnitude > 1 then
+										self.CurrentPos = self.Model.HumanoidRootPart.Position
+										continue
+									end
+									self:AddToSlot(self.CurrentStand)
+									humConnect:Disconnect()
+									continue
+								end
+							end
+						end
+					end)
+				)
 			end
 			local Cash = Player.leaderstats.Cash.Value
 

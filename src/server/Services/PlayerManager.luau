@@ -63,20 +63,30 @@ function PlayerManager:Start()
 						item:Clone().Parent = PlayerItemFolder
 					end
 				end
+				for _, item in Player.Character:GetChildren() do
+					if item:IsA("Tool") and item.Name ~= "DefaultBat" then
+						local PlayerItemFolder = ItemTools:FindFirstChild(Player.Name) or Instance.new("Folder")
+						PlayerItemFolder.Parent = ItemTools
+						PlayerItemFolder.Name = Player.Name
+						item:Clone().Parent = PlayerItemFolder
+					end
+				end
 			end)
 		end
 
 		Reconnect()
 
 		Player.CharacterAdded:Connect(function()
-			for _, item in ItemTools[Player.Name]:GetChildren() do
-				item.Parent = Player:WaitForChild("Backpack")
+			if ItemTools:FindFirstChild(Player.Name) then
+				for _, item in ItemTools[Player.Name]:GetChildren() do
+					item.Parent = Player:WaitForChild("Backpack")
+				end
+
+				con:Disconnect()
+				Reconnect()
+
+				BaseManager:TeleportPlayerToBase(Player)
 			end
-
-			con:Disconnect()
-			Reconnect()
-
-			BaseManager:TeleportPlayerToBase(Player)
 		end)
 	end)
 	Players.PlayerRemoving:Connect(function(Player)
