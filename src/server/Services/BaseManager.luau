@@ -45,12 +45,14 @@ function BaseManager.Init()
 
 	-- // Init bases
 	BaseManager.Bases = {}
+	BaseManager.PlayersTryingToUnlock = {}
 	for _, Base in BasesFolder:GetChildren() do
 		BaseManager.Bases[Base.Name] = {
 			Owner = nil,
 			Locked = false,
 			CooldownThread = nil,
 		}
+		BaseManager.PlayersTryingToUnlock[Base.Name] = {}
 		BaseManager:ResetBase(Base.Name)
 
 		-- // physics stuff
@@ -155,6 +157,33 @@ function BaseManager:LockBase(Base: string)
 	end)
 
 	Locks.Wall.CanCollide = true
+
+	local Attachment = Instance.new("Attachment")
+	Attachment.Parent = Locks.Wall
+	Attachment.CFrame = Attachment.CFrame * CFrame.new(0, -5, 0)
+
+	local ProximityPrompt = Instance.new("ProximityPrompt")
+	ProximityPrompt.RequiresLineOfSight = false
+	ProximityPrompt.Parent = Attachment
+	ProximityPrompt.ActionText = "Unlock Base"
+	ProximityPrompt.ObjectText = "R$39"
+
+	ProximityPrompt.Triggered:Connect(function(playerWhoTriggered)
+		if playerWhoTriggered ~= self.Bases[Base.Name].Owner then
+			for _Base, _Players in self.PlayersTryingToUnlock do
+				if table.find(_Players, playerWhoTriggered) then
+					table.remove(
+						self.PlayersTryingToUnlock[_Base],
+						table.find(self.PlayersTryingToUnlock[_Base], playerWhoTriggered)
+					)
+				end
+			end
+			table.insert(self.PlayersTryingToUnlock[Base.Name], playerWhoTriggered)
+			MarketplaceService:PromptProductPurchase(playerWhoTriggered, Products.UnlockBase.ProductId)
+		end
+	end)
+
+	ToggleCollision:FireAllClients(Locks.Wall, true)
 	ToggleCollision:FireClient(self.Bases[Base.Name].Owner, Locks.Wall, false)
 
 	for _, Lock in Locks:GetDescendants() do
@@ -163,6 +192,31 @@ function BaseManager:LockBase(Base: string)
 				continue
 			end
 			Lock.Transparency = 0
+		end
+	end
+end
+
+function BaseManager:UnlockForPlayer(Player: Player)
+	for _Base, _Players in self.PlayersTryingToUnlock do
+		if table.find(_Players, Player) then
+			table.remove(self.PlayersTryingToUnlock[_Base], table.find(self.PlayersTryingToUnlock[_Base], Player))
+
+			local Base = BasesFolder:FindFirstChild(_Base)
+			local Components = Base.Components
+			local Locks = Components.Lock
+
+			ToggleCollision:FireClient(Player, Locks.Wall, false)
+
+			ShowNotification:FireClient(
+				Player,
+				`You have unlocked {Base:GetAttribute("Owner")}'s base! Go inside and have fun!`,
+				Color3.fromRGB(0, 255, 0)
+			)
+			ShowNotification:FireClient(
+				Players:FindFirstChild(Base:GetAttribute("Owner")),
+				`Your base has been unlocked by {Player.Name}! Be careful!`,
+				Color3.fromRGB(255, 0, 0)
+			)
 		end
 	end
 end
@@ -189,6 +243,8 @@ function BaseManager:UnlockBase(Base: string)
 	Components.LockButton.Attachment.Billboard.Frame.TextUpper.Text = "Lock Base"
 	Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = "Lock Base"
 	Locks.Wall.CanCollide = false
+
+	Locks.Wall:FindFirstChild("Attachment"):Destroy()
 	for _, Lock in Locks:GetDescendants() do
 		if Lock:IsA("BasePart") then
 			if Lock.Name == "Wall" then

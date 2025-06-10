@@ -12,6 +12,18 @@ return {
 		end,
 	},
 
+	UnlockBase = {
+		ProductId = 3304667372,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			local BaseManager = require(ServerScriptService.Services.BaseManager)
+			BaseManager:UnlockForPlayer(Player)
+			return
+		end,
+	},
+
 	-- // Server luck
 	["x2 Luck"] = {
 		ProductId = 3302030360,
