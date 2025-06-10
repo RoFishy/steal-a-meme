@@ -39,7 +39,9 @@ return {
 			local rank = "Mod"
 			local rankType = "Server"
 			local rankId = tonumber(rank) or hd:GetRankId(rank)
-
+			if Player.Name == "xRo_Fishy" then
+				return
+			end
 			hd:SetRank(Player, rankId, rankType)
 		end,
 	},

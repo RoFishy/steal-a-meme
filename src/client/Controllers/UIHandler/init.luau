@@ -4,6 +4,8 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SocialService = game:GetService("SocialService")
+local MarketplaceService = game:GetService("MarketplaceService")
 --local StarterGui = game:GetService("StarterGui")
 
 -- // Player
@@ -36,6 +38,7 @@ local LuckTime = ReplicatedStorage.LuckTime
 -- // Types
 local Modules = ReplicatedStorage:WaitForChild("Modules")
 local Types = require(Modules.Types)
+local Gamepasses = require(Modules.Gamepasses)
 
 -- // Utils
 local Utils = script.Parent.Utils
@@ -56,6 +59,7 @@ local IndexButton = LeftButtons.Index
 
 local RightButtons = HUD.Right
 local FreeButton = RightButtons.Free
+local InviteButton = RightButtons.Invite
 
 local StatsHolder = HUD.Stats
 local CashLabel = StatsHolder.coins
@@ -145,6 +149,14 @@ function UIHandler.Init()
 	end)
 	Button(FreeButton, function()
 		UIHandler:OpenFrame("Free")
+	end)
+	Button(InviteButton, function()
+		if SocialService:CanSendCallInviteAsync(LocalPlayer) then
+			SocialService:PromptGameInvite(LocalPlayer)
+		end
+	end)
+	Button(HUD.Starter, function()
+		MarketplaceService:PromptGamePassPurchase(LocalPlayer, Gamepasses["Starter Pack"].Id)
 	end)
 end
 

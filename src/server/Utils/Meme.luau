@@ -530,6 +530,32 @@ function Meme:SetupConnections()
 
 	self.Prompt = ProximityPrompt
 	local humConnect
+
+	self.CurrentPos = nil
+	table.insert(
+		self.Threads,
+		task.spawn(function()
+			while task.wait(3) do
+				if not self.CurrentPos then
+					self.CurrentPos = self.Model.HumanoidRootPart.Position
+					continue
+				end
+				if self.CurrentStand then
+					local CollectZone = self.CurrentStand.Parent.Parent.Components.CollectZone.CollectPart.PrimaryPart
+					if (self.Model.HumanoidRootPart.Position - CollectZone.Position).magnitude < 3 then
+						if (self.Model.HumanoidRootPart.Position - self.CurrentPos).magnitude > 1 then
+							self.CurrentPos = self.Model.HumanoidRootPart.Position
+							continue
+						end
+						self:AddToSlot(self.CurrentStand)
+						humConnect:Disconnect()
+						continue
+					end
+				end
+			end
+		end)
+	)
+
 	table.insert(
 		self.Connections,
 		ProximityPrompt.Triggered:Connect(function(Player: Player)
@@ -597,14 +623,16 @@ function Meme:SetupConnections()
 							self:Destroy()
 							return
 						end
-						task.cancel(self.CurrentMove)
+						pcall(function()
+							task.cancel(self.CurrentMove)
+						end)
 						self.CurrentStand = OpenSlot
 						self:AddToSlot(OpenSlot)
 						humConnect:Disconnect()
 					end
 				end)
 				CollectZone:trackItem(self.Model)
-				for _, part in self.Model:GetChildren() do
+				for _, part in self.Model:GetDescendants() do
 					if not part:IsA("BasePart") then
 						continue
 					end
