@@ -214,7 +214,7 @@ end
 function Meme:GetOpenSlot(Slots: Folder)
 	local SlotSpaces = Slots:GetChildren()
 	for i = 1, #SlotSpaces do
-		local CurrentSlot = SlotSpaces[i]
+		local CurrentSlot = self:GetSlotByIndex(i, Slots)
 		if CurrentSlot:GetAttribute("Meme") then
 			continue
 		end
@@ -348,13 +348,8 @@ function Meme:Steal(StealPlayer: Player)
 
 				OpenSlot:SetAttribute("Meme", self.Name)
 
-				for _, Part: BasePart in self.Model:GetChildren() do
-					if not Part:IsA("BasePart") then
-						continue
-					end
-					Part.CanCollide = true
-					Part.Anchored = true
-				end
+				self.RootPart.CanCollide = true
+				self.RootPart.Anchored = true
 
 				Weld:Destroy()
 				self.CurrentStand = OpenSlot
@@ -380,7 +375,7 @@ function Meme:Steal(StealPlayer: Player)
 			--db = false
 			--end)
 			pcall(function()
-				EditPrompt:FireAllClients("Steal", self.Name)
+				EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name)
 			end)
 
 			local Slots = StealPlayerBase.Slots
@@ -395,15 +390,11 @@ function Meme:Steal(StealPlayer: Player)
 
 			self.PurchasePlayer = StealPlayer
 			self.CurrentStand = OpenSlot
-			for _, Part: BasePart in self.Model:GetChildren() do
-				if not Part:IsA("BasePart") then
-					continue
-				end
-				Part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-				Part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-				Part.CanCollide = true
-				Part.Anchored = true
-			end
+
+			self.RootPart.Anchored = true
+			self.RootPart.CanCollide = true
+			self.RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+			self.RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 			Weld:Destroy()
 
 			self.BeingStolen = false
@@ -422,7 +413,7 @@ function Meme:Steal(StealPlayer: Player)
 		Players.PlayerRemoving:Connect(function(player)
 			if player == StealPlayer then
 				pcall(function()
-					EditPrompt:FireAllClients("Steal", self.Name)
+					EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name)
 				end)
 
 				local Slots = OriginalPlayerBase.Slots
@@ -436,13 +427,9 @@ function Meme:Steal(StealPlayer: Player)
 
 				self.PurchasePlayer = OriginalPlayer
 				self.CurrentStand = OpenSlot
-				for _, Part: BasePart in self.Model:GetChildren() do
-					if not Part:IsA("BasePart") then
-						continue
-					end
-					Part.Anchored = true
-					Part.CanCollide = true
-				end
+				self.RootPart.Anchored = true
+				self.RootPart.CanCollide = true
+
 				Weld:Destroy()
 				self.BeingStolen = false
 				self:AddToSlot(OpenSlot)
@@ -455,7 +442,7 @@ function Meme:Steal(StealPlayer: Player)
 		self.Connections,
 		StealPlayer.Character.Humanoid.Died:Connect(function()
 			pcall(function()
-				EditPrompt:FireAllClients("Steal", self.Name)
+				EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name)
 			end)
 
 			StealPlayer:SetAttribute("Stealing", nil)
@@ -471,13 +458,9 @@ function Meme:Steal(StealPlayer: Player)
 
 			self.PurchasePlayer = OriginalPlayer
 			self.CurrentStand = OpenSlot
-			for _, Part: BasePart in self.Model:GetChildren() do
-				if not Part:IsA("BasePart") then
-					continue
-				end
-				Part.Anchored = true
-				Part.CanCollide = true
-			end
+			self.RootPart.Anchored = true
+			self.RootPart.CanCollide = true
+
 			Weld:Destroy()
 			self.BeingStolen = false
 			self:AddToSlot(OpenSlot)
@@ -504,24 +487,23 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 		Signal.AddMemeToPlayer:Fire(self.PurchasePlayer, self)
 	end
 
-	self.Model:PivotTo((Slot.Stand.CFrame + Vector3.new(0, 5, 0)) * CFrame.fromEulerAngles(0, math.rad(-90), 0))
+	local cframe, size = self.Model:GetBoundingBox()
+	local modelPivot = self.Model:GetPivot()
 
-	for _, Part in self.Model:GetChildren() do
-		if not Part:IsA("BasePart") then
-			continue
-		end
-		Part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-		Part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-		Part.Anchored = false
-	end
+	local heightOffset = modelPivot.Position.Y - cframe.Position.Y + size.Y*0.5
+	local targetPivot = Slot.Stand.CFrame * CFrame.new(Vector3.new(0, Slot.Stand.Size.Y / 2, 0) + Vector3.new(0, heightOffset, 0)) * CFrame.Angles(0, math.rad(-90), 0)
 
-	task.delay(0.5, function()
-		for _, Part: BasePart in self.Model:GetChildren() do
-			if not Part:IsA("BasePart") then
-				continue
-			end
-			Part.Anchored = true
-		end
+	self.Model:PivotTo(targetPivot)
+	self.RootPart.Anchored = false
+	self.RootPart.AssemblyLinearVelocity = Vector3.zero
+	self.RootPart.AssemblyAngularVelocity = Vector3.zero
+
+	self.Model:PivotTo(targetPivot)
+
+	task.delay(0.1, function()
+		self.Model:PivotTo(targetPivot)
+		self.RootPart.Anchored = true
+		self.Model:PivotTo(targetPivot)
 	end)
 
 	pcall(function()
