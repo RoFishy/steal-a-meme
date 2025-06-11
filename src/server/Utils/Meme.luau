@@ -535,45 +535,6 @@ function Meme:SetupConnections()
 	table.insert(
 		self.Connections,
 		ProximityPrompt.Triggered:Connect(function(Player: Player)
-			local BeingRedirected = false
-			if self.PurchasePlayer then
-				if self.Redirects then
-					BeingRedirected = true
-					TogglePrompt:FireAllClients(ProximityPrompt, true)
-					self.CurrentStand:SetAttribute("Meme", nil)
-					humConnect:Disconnect()
-				else
-					ShowNotification:FireClient(Player, "This meme is not able to be redirected!")
-					return
-				end
-				--self.CurrentStand:SetAttribute("Meme", nil)
-			else
-				table.insert(
-					self.Threads,
-					task.spawn(function()
-						task.wait(1)
-						while task.wait(2) do
-							if not self.CurrentPos then
-								self.CurrentPos = self.Model.HumanoidRootPart.Position
-								continue
-							end
-							if self.CurrentStand then
-								local CollectZone =
-									self.CurrentStand.Parent.Parent.Components.CollectZone.CollectPart.PrimaryPart
-								if (self.Model.HumanoidRootPart.Position - CollectZone.Position).magnitude < 3 then
-									if (self.Model.HumanoidRootPart.Position - self.CurrentPos).magnitude > 1 then
-										self.CurrentPos = self.Model.HumanoidRootPart.Position
-										continue
-									end
-									self:AddToSlot(self.CurrentStand)
-									humConnect:Disconnect()
-									continue
-								end
-							end
-						end
-					end)
-				)
-			end
 			local Cash = Player.leaderstats.Cash.Value
 
 			local PlayerBase = GetPlayerBase(Player)
@@ -586,6 +547,20 @@ function Meme:SetupConnections()
 					err:Destroy()
 				end)
 				return ShowNotification:FireClient(Player, "You do not have any open slots!")
+			end
+
+			local BeingRedirected = false
+			if self.PurchasePlayer then
+				if self.Redirects then
+					BeingRedirected = true
+					TogglePrompt:FireAllClients(ProximityPrompt, true)
+					self.CurrentStand:SetAttribute("Meme", nil)
+					humConnect:Disconnect()
+				else
+					ShowNotification:FireClient(Player, "This meme is not able to be redirected!")
+					return
+				end
+				--self.CurrentStand:SetAttribute("Meme", nil)
 			end
 
 			if Cash >= self.Info.Price then

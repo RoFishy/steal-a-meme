@@ -44,7 +44,8 @@ function PlayerManager:Start()
 			end
 			PassManager:LoadPlayerPasses(Player)
 		end)
-		for _, BadgeId in JOIN_BADGES do
+		for i = 1, #JOIN_BADGES do
+			local BadgeId = JOIN_BADGES[i]
 			BadgeService:AwardBadge(Player.UserId, BadgeId)
 		end
 
