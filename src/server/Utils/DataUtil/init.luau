@@ -31,6 +31,7 @@ local PlayerStore = ProfileStore.New("PlayerStore", DataTemplate)
 
 -- // Const
 local DATA_TOKEN = Replica.Token("PlayerData")
+local MAX_OFFLINE_EARNINGS_TIME = 10800
 
 -- // Var
 local Profiles = {} :: { [Player]: typeof(ProfileStore:StartSessionAsync()) }
@@ -232,7 +233,8 @@ function DataUtil:CalculateOfflineEarnings(Player: Player, MemeObj): number?
 		local LastJoin = Profile.Data.LastJoin
 		if LastJoin then
 			local Time = tick() - LastJoin
-			local Income = MemeObj.Info.Income * Time
+			local Income = MemeObj.Info.Income
+				* (Time < MAX_OFFLINE_EARNINGS_TIME and Time or MAX_OFFLINE_EARNINGS_TIME)
 
 			return math.abs(math.ceil(Income / 2))
 		end

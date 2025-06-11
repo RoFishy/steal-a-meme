@@ -390,6 +390,9 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	if LoadData == nil then
 		Signal.AddMemeToPlayer:Fire(self.PurchasePlayer, self)
 	end
+
+	self.Model:PivotTo((Slot.Stand.CFrame + Vector3.new(0, 5, 0)) * CFrame.fromEulerAngles(0, math.rad(-90), 0))
+
 	for _, Part in self.Model:GetChildren() do
 		if not Part:IsA("BasePart") then
 			continue
@@ -398,8 +401,6 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 		Part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 		Part.Anchored = false
 	end
-
-	self.Model:PivotTo((Slot.Stand.CFrame + Vector3.new(0, 5, 0)) * CFrame.fromEulerAngles(0, math.rad(-90), 0))
 
 	task.delay(0.5, function()
 		for _, Part: BasePart in self.Model:GetChildren() do
@@ -530,6 +531,7 @@ function Meme:SetupConnections()
 
 	self.Prompt = ProximityPrompt
 	local humConnect
+	local moveConn
 
 	self.CurrentPos = nil
 	table.insert(
@@ -556,6 +558,7 @@ function Meme:SetupConnections()
 					TogglePrompt:FireAllClients(ProximityPrompt, true)
 					self.CurrentStand:SetAttribute("Meme", nil)
 					humConnect:Disconnect()
+					moveConn:Disconnect()
 				else
 					ShowNotification:FireClient(Player, "This meme is not able to be redirected!")
 					return
@@ -594,6 +597,18 @@ function Meme:SetupConnections()
 
 				local CollectZone = ZonePlus.new(PlayerBase.Components.CollectZone.CollectPart)
 
+				moveConn = self.Model.Humanoid.MoveToFinished:Connect(function()
+					local distance = (
+						self.Model.PrimaryPart.Position
+						- PlayerBase.Components.CollectZone.CollectPart.PrimaryPart.Position
+					).Magnitude
+					if distance < 3 then
+						print("Fallback triggered - meme close but not detected")
+						self:AddToSlot(OpenSlot)
+						humConnect:Disconnect()
+					end
+				end)
+
 				CollectZone.itemEntered:Connect(function(item)
 					if item.Parent == self.Model or item == self.Model then
 						if Player.Parent ~= Players then
@@ -606,14 +621,14 @@ function Meme:SetupConnections()
 						self.CurrentStand = OpenSlot
 						self:AddToSlot(OpenSlot)
 						humConnect:Disconnect()
+						moveConn:Disconnect()
 					end
 				end)
 				CollectZone:trackItem(self.Model)
 				for _, part in self.Model:GetDescendants() do
-					if not part:IsA("BasePart") then
-						continue
+					if part:IsA("BasePart") then
+						CollectZone:trackItem(part)
 					end
-					CollectZone:trackItem(part)
 				end
 
 				humConnect = {
