@@ -35,9 +35,10 @@ function RebirthManager:Start()
 			DataUtil:IncrementRebirths(Player, 1)
 
 			local CurrentMemes = DataUtil:GetCurrentMemes(Player)
-			for _, Meme in CurrentMemes do
+			local CurrentMemeReferences = DataUtil:GetCurrentMemeReferences()
+			for ID, Meme in CurrentMemes do
 				DataUtil:RemoveMemeFromPlayer(Player, Meme)
-				Meme.Model:Destroy()
+				CurrentMemeReferences[ID]:Destroy()
 			end
 			for _, slot in GetPlayerBase(Player).Slots:GetChildren() do
 				local collectAt = slot.Collect.Attachment
