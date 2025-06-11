@@ -244,7 +244,9 @@ function BaseManager:UnlockBase(Base: string)
 	Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = "Lock Base"
 	Locks.Wall.CanCollide = false
 
-	Locks.Wall:FindFirstChild("Attachment"):Destroy()
+	if Locks.Wall:FindFirstChildOfClass("Attachment") then
+		Locks.Wall:FindFirstChildOfClass("Attachment"):Destroy()
+	end
 	for _, Lock in Locks:GetDescendants() do
 		if Lock:IsA("BasePart") then
 			if Lock.Name == "Wall" then

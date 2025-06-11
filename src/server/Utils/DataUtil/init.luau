@@ -35,6 +35,7 @@ local MAX_OFFLINE_EARNINGS_TIME = 10800
 
 -- // Var
 local Profiles = {} :: { [Player]: typeof(ProfileStore:StartSessionAsync()) }
+local MemeReferences = {}
 local Replicas = {}
 
 -- // local funcs
@@ -188,8 +189,9 @@ function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
 			Stand = MemeObj.CurrentStand.Name,
 
 			-- // cleanup on game end:
-			Model = MemeObj.Model,
+			--Model = MemeObj.Model,
 		}
+		MemeReferences[MemeObj.Model:GetAttribute("ID")] = MemeObj.Model
 		if not table.find(Profile.Data.Index, MemeObj.Name) then
 			local _replica = Replicas[Player]
 			table.insert(Profile.Data.Index, MemeObj.Name)
@@ -216,6 +218,7 @@ function DataUtil:LoadMemes(Player: Player)
 			end
 			OpenSlot:SetAttribute("Meme", Slot.Name)
 			local _meme = Meme.new(Slot.Name, "", CFrame.new(0, 0, 0), Slot)
+			MemeReferences[ID] = _meme.Model
 			_meme.Model:SetAttribute("ID", ID)
 			_meme.PurchasePlayer = Player
 			_meme.CurrentStand = OpenSlot
@@ -254,6 +257,10 @@ function DataUtil:GetCurrentMemes(Player: Player)
 	if Profile then
 		return Profile.Data.Slots
 	end
+end
+
+function DataUtil:GetCurrentMemeReferences()
+	return Meme
 end
 
 function DataUtil:GetData(Player: Player): Types.UserData
