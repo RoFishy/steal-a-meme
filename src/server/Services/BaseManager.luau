@@ -27,6 +27,19 @@ local Floor = workspace.Floor
 --local LOCK_COOLDOWN = 30
 local BYPASS_COOLDOWN_PRODUCT = Products.BypassLockCooldown.ProductId
 
+-- // Local Functions
+function Format(Int)
+	return string.format("%02i", Int)
+end
+
+function convertToMS(Seconds)
+	local Minutes = (Seconds - Seconds % 60) / 60
+	Seconds = Seconds - Minutes * 60
+	local Hours = (Minutes - Minutes % 60) / 60
+	Minutes = Minutes - Hours * 60
+	return Format(Minutes) .. ":" .. Format(Seconds)
+end
+
 -- // Module
 local BaseManager = {}
 
@@ -76,6 +89,7 @@ function BaseManager:Start()
 	for _, Base in BasesFolder:GetChildren() do
 		local Components = Base.Components
 		local LockButton: Part = Components.LockButton
+		local RobuxLockButton: Part = Components.LockButtonRBX
 
 		LockButton.Touched:Connect(function(Hit: Part)
 			local Player = Players:GetPlayerFromCharacter(Hit.Parent)
@@ -96,6 +110,19 @@ function BaseManager:Start()
 						`You have locked your base for {LockTime} seconds!`,
 						Color3.fromRGB(0, 255, 0)
 					)
+				end
+			end
+		end)
+
+		RobuxLockButton.Touched:Connect(function(Hit: Part)
+			local Player = Players:GetPlayerFromCharacter(Hit.Parent)
+			if Player then
+				local BaseData = self.Bases[Base.Name]
+				if BaseData.Owner and BaseData.Owner == Player then
+					if BaseData.Locked == true then
+						return
+					end
+					MarketplaceService:PromptProductPurchase(Player, Products["Lock Base 15 Minutes"].ProductId)
 				end
 			end
 		end)
@@ -135,7 +162,7 @@ function BaseManager:GetBaseNameFromPlayer(Player: Player): string?
 	return nil
 end
 
-function BaseManager:LockBase(Base: string)
+function BaseManager:LockBase(Base: string, Time: number?)
 	Base = BasesFolder[Base]
 
 	self.Bases[Base.Name].Locked = true
@@ -147,10 +174,12 @@ function BaseManager:LockBase(Base: string)
 	local Components = Base.Components
 	local Locks = Components.Lock
 
+	local _LockTime = Time or LockTime
+
 	task.spawn(function()
-		for i = LockTime, 0, -1 do
-			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Text = `Locked for: {i}`
-			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = `Locked for: {i}`
+		for i = _LockTime, 0, -1 do
+			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Text = `Locked for: {convertToMS(i)}`
+			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = `Locked for: {convertToMS(i)}`
 			task.wait(1)
 		end
 		self:UnlockBase(Base.Name)

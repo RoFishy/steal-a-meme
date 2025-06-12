@@ -16,4 +16,7 @@ return {
 	-- // luck
 	ResetServerLuck = Signal.new(),
 	IncreaseServerLuck = Signal.new(),
+
+	-- // Memes
+	RobuxBuyMeme = Signal.new(),
 }

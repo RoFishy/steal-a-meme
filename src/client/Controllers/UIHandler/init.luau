@@ -39,6 +39,7 @@ local LuckTime = ReplicatedStorage.LuckTime
 local Modules = ReplicatedStorage:WaitForChild("Modules")
 local Types = require(Modules.Types)
 local Gamepasses = require(Modules.Gamepasses)
+local Products = require(Modules.Products)
 
 -- // Utils
 local Utils = script.Parent.Utils
@@ -51,6 +52,9 @@ local Blur = Lighting:WaitForChild("Blur")
 local MainUI = PlayerGui:WaitForChild("UI")
 
 local HUD = MainUI:WaitForChild("Hud")
+
+local Top = HUD.Top
+local TpButton = Top.Tp
 
 local LeftButtons = HUD.Left
 local ShopButton = LeftButtons.Shop
@@ -157,6 +161,9 @@ function UIHandler.Init()
 	end)
 	Button(HUD.Starter, function()
 		MarketplaceService:PromptGamePassPurchase(LocalPlayer, Gamepasses["Starter Pack"].Id)
+	end)
+	Button(TpButton, function()
+		MarketplaceService:PromptProductPurchase(LocalPlayer, Products["Teleport To Base"].ProductId)
 	end)
 end
 

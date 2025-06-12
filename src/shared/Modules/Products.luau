@@ -1,4 +1,5 @@
 return {
+	-- // Bases
 	BypassLockCooldown = {
 		ProductId = 3299780200,
 		Callback = function(Player: Player)
@@ -12,7 +13,7 @@ return {
 		end,
 	},
 
-	UnlockBase = {
+	["Unlock Base"] = {
 		ProductId = 3304667372,
 		Callback = function(Player: Player)
 			-- // Services
@@ -20,6 +21,47 @@ return {
 
 			local BaseManager = require(ServerScriptService.Services.BaseManager)
 			BaseManager:UnlockForPlayer(Player)
+			return
+		end,
+	},
+
+	["Teleport To Base"] = {
+		ProductId = 3306101611,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			local BaseManager = require(ServerScriptService.Services.BaseManager)
+
+			BaseManager:TeleportPlayerToBase(Player)
+			return
+		end,
+	},
+
+	["Lock Base 15 Minutes"] = {
+		ProductId = 3306061444,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			local BaseManager = require(ServerScriptService.Services.BaseManager)
+			BaseManager:LockBase(BaseManager:GetBaseNameFromPlayer(Player), 900)
+			return
+		end,
+	},
+
+	-- // Memes
+	["Legendary Meme"] = {
+		ProductId = 3305650625,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Signals = require(Utils.Signals)
+
+			Signals.RobuxBuyMeme:Fire(Player)
 			return
 		end,
 	},
