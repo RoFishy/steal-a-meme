@@ -37,7 +37,7 @@ function RebirthManager:Start()
 			local CurrentMemes = DataUtil:GetCurrentMemes(Player)
 			local CurrentMemeReferences = DataUtil:GetCurrentMemeReferences()
 			for ID, Meme in CurrentMemes do
-				DataUtil:RemoveMemeFromPlayer(Player, Meme)
+				DataUtil:RemoveMemeFromPlayer(Player, Meme, ID)
 				CurrentMemeReferences[ID]:Destroy()
 			end
 			for _, slot in GetPlayerBase(Player).Slots:GetChildren() do

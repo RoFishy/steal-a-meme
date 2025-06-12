@@ -268,10 +268,14 @@ function DataUtil:CalculateOfflineEarnings(Player: Player, MemeObj): number?
 	return nil
 end
 
-function DataUtil:RemoveMemeFromPlayer(Player: Player, MemeObj)
+function DataUtil:RemoveMemeFromPlayer(Player: Player, MemeObj, ID: string?)
 	local Profile = Profiles[Player]
-	if Profile and MemeObj.Model:GetAttribute("ID") then
-		Profile.Data.Slots[MemeObj.Model:GetAttribute("ID")] = nil
+	if ID then
+		Profile.Data.Slots[ID] = nil
+	else
+		if Profile and MemeObj.Model:GetAttribute("ID") then
+			Profile.Data.Slots[MemeObj.Model:GetAttribute("ID")] = nil
+		end
 	end
 end
 
