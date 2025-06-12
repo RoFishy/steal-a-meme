@@ -1,4 +1,5 @@
 -- // Services
+local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local SoundService = game:GetService("SoundService")
@@ -7,10 +8,7 @@ local SoundService = game:GetService("SoundService")
 local Modules = ReplicatedStorage.Modules
 local Spawns = require(Modules.Spawns)
 local Rebirths = require(Modules.Rebirths)
-
--- // Packages
-local Packages = ReplicatedStorage.Packages
-local ZonePlus = require(Packages.ZonePlus)
+local Products = require(Modules.Products)
 
 -- // Remotes
 local Remotes = ReplicatedStorage.Remotes
@@ -79,7 +77,7 @@ local function TouchZone(model: Model)
 		local ancestor: Model? = hit:FindFirstAncestorOfClass("Model")
 		local player: Player? = ancestor and Players:GetPlayerFromCharacter(ancestor)
 		local now = time()
-		
+
 		if ancestor and (not nextTouch[ancestor] or nextTouch[ancestor] < now) then
 			nextTouch[ancestor] = now + 1
 			if player then
@@ -113,7 +111,7 @@ local function TouchZone(model: Model)
 					if i then
 						table.remove(playerTouched, i)
 					end
-				end
+				end,
 			}
 		end,
 		memeTouched = function(callback)
@@ -124,7 +122,7 @@ local function TouchZone(model: Model)
 					if i then
 						table.remove(memeTouched, i)
 					end
-				end
+				end,
 			}
 		end,
 
@@ -136,7 +134,7 @@ local function TouchZone(model: Model)
 			end
 
 			connections = {}
-		end
+		end,
 	}
 end
 
@@ -199,7 +197,6 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo:
 	return self
 end
 
-
 function Meme:SetCollisionGroup(NewGroup: string)
 	for _, Item: BasePart in self.Model:GetDescendants() do
 		if Item:IsA("BasePart") then
@@ -209,7 +206,7 @@ function Meme:SetCollisionGroup(NewGroup: string)
 end
 
 function Meme:GetSlotByIndex(Index: number, Slots: Folder)
-	return Slots:FindFirstChild("Slot"..Index)
+	return Slots:FindFirstChild("Slot" .. Index)
 end
 
 function Meme:GetOpenSlot(Slots: Folder)
@@ -318,7 +315,7 @@ function Meme:Steal(StealPlayer: Player)
 	local BaseComponents = StealPlayerBase.Components
 	local BaseCollectZone = BaseComponents.CollectZone.CollectPart
 
-	local CollectZone = TouchZone(BaseCollectZone)-- ZonePlus.new(BaseCollectZone)
+	local CollectZone = TouchZone(BaseCollectZone) -- ZonePlus.new(BaseCollectZone)
 
 	table.insert(
 		self.Connections,
@@ -362,9 +359,9 @@ function Meme:Steal(StealPlayer: Player)
 				TogglePrompt:FireAllClients(self.Prompt, true)
 				self.BeingStolen = false
 
-				local speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
-				if speedOffset then
-					StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed + speedOffset
+				local _speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
+				if _speedOffset then
+					StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed + _speedOffset
 				else
 					StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
 				end
@@ -411,13 +408,13 @@ function Meme:Steal(StealPlayer: Player)
 
 			self.BeingStolen = false
 			self:AddToSlot(OpenSlot)
-			
+
 			local DataUtil = require(Utils.DataUtil)
 			DataUtil:IncrementSteals(StealPlayer, 1)
-			
-			local speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
-			if speedOffset then
-				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed + speedOffset
+
+			local _speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
+			if _speedOffset then
+				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed + _speedOffset
 			else
 				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
 			end
@@ -437,7 +434,9 @@ function Meme:Steal(StealPlayer: Player)
 				local Slots = OriginalPlayerBase.Slots
 				local OpenSlot = self:GetOpenSlot(Slots)
 				if not OpenSlot then
-					warn("Could not return stolen meme to original player because they don't have an open slot. thief left")
+					warn(
+						"Could not return stolen meme to original player because they don't have an open slot. thief left"
+					)
 					self:Destroy()
 					return
 				end
@@ -468,7 +467,7 @@ function Meme:Steal(StealPlayer: Player)
 			local Slots = OriginalPlayerBase.Slots
 			local OpenSlot = self:GetOpenSlot(Slots)
 			if not OpenSlot then
-			warn("Could not return stolen meme to original player because they don't have an open slot. thief died")
+				warn("Could not return stolen meme to original player because they don't have an open slot. thief died")
 				self:Destroy()
 				return
 			end
@@ -528,8 +527,10 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	local cframe, size = self.Model:GetBoundingBox()
 	local modelPivot = self.Model:GetPivot()
 
-	local heightOffset = modelPivot.Position.Y - cframe.Position.Y + size.Y*0.5
-	local targetPivot = Slot.Stand.CFrame * CFrame.new(Vector3.new(0, Slot.Stand.Size.Y / 2, 0) + Vector3.new(0, heightOffset, 0)) * CFrame.Angles(0, math.rad(-90), 0)
+	local heightOffset = modelPivot.Position.Y - cframe.Position.Y + size.Y * 0.5
+	local targetPivot = Slot.Stand.CFrame
+		* CFrame.new(Vector3.new(0, Slot.Stand.Size.Y / 2, 0) + Vector3.new(0, heightOffset, 0))
+		* CFrame.Angles(0, math.rad(-90), 0)
 
 	self.Model:PivotTo(targetPivot)
 	self.RootPart.Anchored = false
@@ -561,13 +562,25 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	if LoadData then
 		task.delay(5, function()
 			if self.PurchasePlayer then
-				EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+				EditPrompt:FireClient(
+					self.PurchasePlayer,
+					self.Prompt,
+					"Sell",
+					`Sell ${self.Name} for ${SellPrice}`,
+					nil
+				)
 			end
 		end)
 	else
 		task.delay(1, function()
 			if self.PurchasePlayer then
-				EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+				EditPrompt:FireClient(
+					self.PurchasePlayer,
+					self.Prompt,
+					"Sell",
+					`Sell ${self.Name} for ${SellPrice}`,
+					nil
+				)
 			end
 		end)
 	end
@@ -638,6 +651,10 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 
 	self.Prompt.Triggered:Once(function(Player: Player)
 		if Player == self.PurchasePlayer then
+			if SellPrice == 0 then
+				ShowNotification:FireClient(Player, "You cannot sell a Robux pet!")
+				return
+			end
 			Signal.IncrementCash:Fire(Player, SellPrice)
 			Signal.RemoveMemeFromPlayer:Fire(self.PurchasePlayer, self)
 			local sound = SoundService.CashCollect:Clone()
@@ -671,6 +688,112 @@ function Meme:SetupConnections()
 	local moveConn
 
 	self.CurrentPos = nil
+	table.insert(
+		self.Connections,
+		Signal.RobuxBuyMeme:Connect(function(Player: Player)
+			local DataUtil = require(script.Parent.DataUtil)
+			local PlayersPurchasingMemes = DataUtil:GetPlayersPurchasingMemes()
+			local NewTable = PlayersPurchasingMemes
+			local CurrentId = self.Model:GetAttribute("ID")
+
+			if not NewTable[CurrentId] then
+				return
+			end
+
+			for _, _Player in NewTable[CurrentId] do
+				if _Player == Player then
+					table.remove(NewTable[CurrentId], table.find(NewTable[CurrentId], Player))
+
+					local PlayerBase = GetPlayerBase(Player)
+					local Slots = PlayerBase and PlayerBase.Slots
+					if not Slots then
+						warn("Slots/PlayerBase is invalid")
+						return
+					end
+
+					if not self:GetOpenSlot(Slots) then
+						local err = SoundService.Error:Clone()
+						err.Parent = Player.PlayerGui
+						err:Play()
+						err.Ended:Once(function()
+							err:Destroy()
+						end)
+						return ShowNotification:FireClient(Player, "You do not have any open slots!")
+					end
+
+					local OpenSlot = self:GetOpenSlot(Slots)
+					OpenSlot:SetAttribute("Meme", self.Name)
+					self.CurrentStand = OpenSlot
+
+					TogglePrompt:FireClient(Player, ProximityPrompt, false)
+
+					local BeingRedirected = false
+					if BeingRedirected then
+						local Sound = SoundService.Nope:Clone()
+						Sound.Parent = self.RootPart
+						Sound:Play()
+						Sound.Ended:Once(function()
+							Sound:Destroy()
+						end)
+					else
+						local sound = SoundService.Success:Clone()
+						sound.Parent = Player.PlayerGui
+						sound:Play()
+						sound.Ended:Once(function()
+							sound:Destroy()
+						end)
+					end
+
+					self.Model.Humanoid.WalkSpeed = 10
+
+					self:MoveTo(PlayerBase.Components.CollectZone.CollectPart.PrimaryPart.Position)
+					self.PurchasePlayer = Player
+
+					local CollectZone = TouchZone(PlayerBase.Components.CollectZone.CollectPart) -- ZonePlus.new(PlayerBase.Components.CollectZone.CollectPart)
+
+					moveConn = self.Model.Humanoid.MoveToFinished:Connect(function()
+						local distance = (
+							(
+								self.Model.PrimaryPart.Position
+								- PlayerBase.Components.CollectZone.CollectPart.PrimaryPart.Position
+							) * Vector3.new(1, 0, 1)
+						).Magnitude
+						if distance < 3 then
+							warn("Fallback triggered - meme close but not detected")
+							self:AddToSlot(OpenSlot)
+							humConnect:Disconnect()
+						end
+					end)
+
+					CollectZone.memeTouched(function(meme)
+						if meme == self.Model then
+							if Player.Parent ~= Players then
+								self:Destroy()
+								return
+							end
+							pcall(function()
+								task.cancel(self.CurrentMove)
+							end)
+
+							self.CurrentStand = OpenSlot
+							self:AddToSlot(OpenSlot)
+							humConnect:Disconnect()
+							moveConn:Disconnect()
+						end
+					end)
+
+					humConnect = {
+						Disconnect = function()
+							CollectZone:Destroy()
+						end,
+					}
+				else
+					return
+				end
+			end
+			DataUtil:UpdatePlayersPurchasingMemes(NewTable)
+		end)
+	)
 	table.insert(
 		self.Connections,
 		ProximityPrompt.Triggered:Connect(function(Player: Player)
@@ -737,13 +860,15 @@ function Meme:SetupConnections()
 				self:MoveTo(PlayerBase.Components.CollectZone.CollectPart.PrimaryPart.Position)
 				self.PurchasePlayer = Player
 
-				local CollectZone = TouchZone(PlayerBase.Components.CollectZone.CollectPart)-- ZonePlus.new(PlayerBase.Components.CollectZone.CollectPart)
+				local CollectZone = TouchZone(PlayerBase.Components.CollectZone.CollectPart) -- ZonePlus.new(PlayerBase.Components.CollectZone.CollectPart)
 
 				moveConn = self.Model.Humanoid.MoveToFinished:Connect(function()
-					local distance = ((
-						self.Model.PrimaryPart.Position
-						- PlayerBase.Components.CollectZone.CollectPart.PrimaryPart.Position
-					)*Vector3.new(1, 0, 1)).Magnitude
+					local distance = (
+						(
+							self.Model.PrimaryPart.Position
+							- PlayerBase.Components.CollectZone.CollectPart.PrimaryPart.Position
+						) * Vector3.new(1, 0, 1)
+					).Magnitude
 					if distance < 3 then
 						warn("Fallback triggered - meme close but not detected")
 						self:AddToSlot(OpenSlot)
@@ -792,6 +917,25 @@ function Meme:SetupConnections()
 					err:Destroy()
 				end)
 				ShowNotification:FireClient(Player, "You do not have enough cash to purchase this meme!")
+				if Products[self.Rarity .. " Meme"] then
+					MarketplaceService:PromptProductPurchase(Player, Products[self.Rarity .. " Meme"].ProductId)
+					local DataUtil = require(script.Parent.DataUtil)
+					local PlayersPurchasingMemes = DataUtil:GetPlayersPurchasingMemes()
+					local NewTable = PlayersPurchasingMemes
+					for ID, _Players in NewTable do
+						for _, _Player in _Players do
+							if _Player == Player then
+								table.remove(NewTable[ID], table.find(NewTable[ID], Player))
+							end
+						end
+					end
+					if not NewTable[self.Model:GetAttribute("ID")] then
+						NewTable[self.Model:GetAttribute("ID")] = {}
+					end
+					table.insert(NewTable[self.Model:GetAttribute("ID")], Player)
+					DataUtil:UpdatePlayersPurchasingMemes(NewTable)
+				end
+
 				return
 			end
 		end)

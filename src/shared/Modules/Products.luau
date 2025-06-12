@@ -66,6 +66,51 @@ return {
 		end,
 	},
 
+	["Mythical Meme"] = {
+		ProductId = 3305650713,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Signals = require(Utils.Signals)
+
+			Signals.RobuxBuyMeme:Fire(Player)
+			return
+		end,
+	},
+
+	["Omega Meme"] = {
+		ProductId = 3305650771,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Signals = require(Utils.Signals)
+
+			Signals.RobuxBuyMeme:Fire(Player)
+			return
+		end,
+	},
+
+	["SECRET??? Meme"] = {
+		ProductId = 3305650843,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Signals = require(Utils.Signals)
+
+			Signals.RobuxBuyMeme:Fire(Player)
+			return
+		end,
+	},
+
 	-- // Server luck
 	["x2 Luck"] = {
 		ProductId = 3302030360,

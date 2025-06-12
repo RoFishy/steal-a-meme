@@ -137,4 +137,17 @@ return {
 			},
 		},
 	},
+	["Robux"] = {
+		Rarity = 0,
+		Spawns = {
+			["Shrek"] = {
+				Price = 0,
+				Income = 300_000,
+			},
+			["DaBaby Car"] = {
+				Price = 0,
+				Income = 0,
+			},
+		},
+	},
 } :: { [string]: Types.Spawn }

@@ -36,6 +36,7 @@ local MAX_OFFLINE_EARNINGS_TIME = 10800
 -- // Var
 local Profiles = {} :: { [Player]: typeof(ProfileStore:StartSessionAsync()) }
 local MemeReferences = {}
+local PlayersPurchasingMemes = {}
 local Replicas = {}
 
 -- // local funcs
@@ -177,6 +178,14 @@ function DataUtil:IncrementLockTime(Player: Player, Amount: number)
 	if Profile then
 		Profile.Data.LockTime += Amount
 	end
+end
+
+function DataUtil:GetPlayersPurchasingMemes()
+	return PlayersPurchasingMemes
+end
+
+function DataUtil:UpdatePlayersPurchasingMemes(NewTable: {})
+	PlayersPurchasingMemes = NewTable
 end
 
 function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
