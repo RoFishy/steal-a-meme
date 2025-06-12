@@ -317,6 +317,52 @@ function Meme:Steal(StealPlayer: Player)
 
 	local CollectZone = TouchZone(BaseCollectZone) -- ZonePlus.new(BaseCollectZone)
 
+	task.delay(1, function()
+		if StealPlayer.Character.Humanoid.Health <= 0 then
+			local PurchasePlayerBase = GetPlayerBase(OriginalPlayer)
+			if not PurchasePlayerBase then
+				warn("SmackPlayer failed, Could not retrieve original player base")
+				return
+			end
+
+			local Slots = PurchasePlayerBase.Slots
+			local OpenSlot = self:GetOpenSlot(Slots)
+			if not OpenSlot then
+				warn("SmackPlayer failed, original player no longer has an open slot")
+				return
+			end
+
+			self.PurchasePlayer = OriginalPlayer
+			StealPlayer:SetAttribute("Stealing", nil)
+
+			local Sound = SoundService.Bruh:Clone()
+			Sound.Parent = self.RootPart
+			Sound:Play()
+			Sound.Ended:Once(function()
+				Sound:Destroy()
+			end)
+
+			OpenSlot:SetAttribute("Meme", self.Name)
+
+			self.RootPart.CanCollide = true
+			self.RootPart.Anchored = true
+
+			Weld:Destroy()
+			self.CurrentStand = OpenSlot
+			TogglePrompt:FireAllClients(self.Prompt, true)
+			self.BeingStolen = false
+
+			local _speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
+			if _speedOffset then
+				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed + _speedOffset
+			else
+				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
+			end
+
+			self:AddToSlot(OpenSlot)
+		end
+	end)
+
 	table.insert(
 		self.Connections,
 		SmackPlayer.Event:Connect(function(_: Player, OtherPlayer: Player)

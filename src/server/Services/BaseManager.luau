@@ -59,6 +59,7 @@ function BaseManager.Init()
 	-- // Init bases
 	BaseManager.Bases = {}
 	BaseManager.PlayersTryingToUnlock = {}
+	BaseManager.WhitelistedPlayers = {}
 	for _, Base in BasesFolder:GetChildren() do
 		BaseManager.Bases[Base.Name] = {
 			Owner = nil,
@@ -90,6 +91,24 @@ function BaseManager:Start()
 		local Components = Base.Components
 		local LockButton: Part = Components.LockButton
 		local RobuxLockButton: Part = Components.LockButtonRBX
+		local CollectArea: Model = Components.CollectZone.CollectPart
+
+		for _, Part in CollectArea:GetChildren() do
+			if CollectArea.PrimaryPart == Part then
+				continue
+			end
+			Part.Touched:Connect(function(hit: Part)
+				local Player = Players:GetPlayerFromCharacter(hit.Parent)
+				if Player then
+					if self.Bases[Base.Name].Locked == false then
+						return
+					end
+					if not table.find(self.WhitelistedPlayers[Base.Name], Player) then
+						Player:Kick("Anticheat - Attempted to noclip into wrong base.")
+					end
+				end
+			end)
+		end
 
 		LockButton.Touched:Connect(function(Hit: Part)
 			local Player = Players:GetPlayerFromCharacter(Hit.Parent)
@@ -173,16 +192,33 @@ function BaseManager:LockBase(Base: string, Time: number?)
 
 	local Components = Base.Components
 	local Locks = Components.Lock
+	local CollectArea: Model = Components.CollectZone.CollectPart
+
+	for _, Part in CollectArea:GetChildren() do
+		if CollectArea.PrimaryPart == Part then
+			continue
+		end
+		local parts = workspace:GetPartsInPart(Part)
+		if parts then
+			for _, hit in parts do
+				local player = Players:GetPlayerFromCharacter(hit.Parent)
+				if player then
+					table.insert(self.WhitelistedPlayers[Base.Name], player)
+				end
+			end
+		end
+	end
 
 	local _LockTime = Time or LockTime
 
-	task.spawn(function()
+	self.Bases[Base.Name].LockThread = task.spawn(function()
 		for i = _LockTime, 0, -1 do
 			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Text = `Locked for: {convertToMS(i)}`
 			Components.LockButton.Attachment.Billboard.Frame.TextUpper.Stroke.Text = `Locked for: {convertToMS(i)}`
 			task.wait(1)
 		end
 		self:UnlockBase(Base.Name)
+		self.Bases[Base.Name].LockThread = nil
 	end)
 
 	Locks.Wall.CanCollide = true
@@ -196,6 +232,8 @@ function BaseManager:LockBase(Base: string, Time: number?)
 	ProximityPrompt.Parent = Attachment
 	ProximityPrompt.ActionText = "Unlock Base"
 	ProximityPrompt.ObjectText = "R$39"
+
+	Remotes.TogglePrompt:FireClient(self.Bases[Base.Name].Owner, ProximityPrompt, false)
 
 	ProximityPrompt.Triggered:Connect(function(playerWhoTriggered)
 		if playerWhoTriggered ~= self.Bases[Base.Name].Owner then
@@ -230,6 +268,12 @@ function BaseManager:UnlockForPlayer(Player: Player)
 		if table.find(_Players, Player) then
 			table.remove(self.PlayersTryingToUnlock[_Base], table.find(self.PlayersTryingToUnlock[_Base], Player))
 
+			if not self.WhitelistedPlayers[_Base] then
+				self.WhitelistedPlayers[_Base] = {}
+			end
+
+			table.insert(self.WhitelistedPlayers[_Base], Player)
+
 			local Base = BasesFolder:FindFirstChild(_Base)
 			local Components = Base.Components
 			local Locks = Components.Lock
@@ -254,6 +298,15 @@ function BaseManager:UnlockBase(Base: string)
 	Base = BasesFolder[Base]
 
 	self.Bases[Base.Name].Locked = false
+
+	if self.WhitelistedPlayers[Base] then
+		for _, Player in self.WhitelistedPlayers[Base] do
+			if Player == self.Bases[Base].Owner then
+				continue
+			end
+			table.remove(self.WhitelistedPlayers[Base], table.find(self.WhitelistedPlayers[Base], Player))
+		end
+	end
 
 	local Components = Base.Components
 	local Locks = Components.Lock
@@ -305,6 +358,12 @@ function BaseManager:AssignBase(Player: Player, Base: string)
 	local BaseName = Base or self:GetEmptyBaseName()
 	assert(BaseName, "No available bases! (Server size limit too high?)")
 
+	if not self.WhitelistedPlayers[BaseName] then
+		self.WhitelistedPlayers[BaseName] = {}
+	end
+
+	table.insert(self.WhitelistedPlayers[BaseName], Player)
+
 	self.Bases[BaseName].Owner = Player
 
 	local BaseModel = BasesFolder[BaseName]
@@ -352,6 +411,10 @@ function BaseManager:TeleportPlayerToBase(Player: Player, Base: string?)
 end
 
 function BaseManager:ResetBase(Base: string)
+	if self.Bases[Base].LockThread then
+		task.cancel(self.Bases[Base].LockThread)
+	end
+
 	if BaseManager.Bases[Base].Locked then
 		self:UnlockBase(Base)
 	end

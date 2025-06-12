@@ -246,7 +246,9 @@ function DataUtil:LoadMemes(Player: Player)
 			end)
 		end
 		task.delay(3, function()
-			Remotes.DoubleCashFrame:FireClient(Player, CurrentOfflineCash)
+			if CurrentOfflineCash > 0 then
+				Remotes.DoubleCashFrame:FireClient(Player, CurrentOfflineCash)
+			end
 		end)
 	end
 end
