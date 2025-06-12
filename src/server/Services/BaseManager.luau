@@ -208,7 +208,7 @@ function BaseManager:LockBase(Base: string, Time: number?)
 				end
 			end
 			table.insert(self.PlayersTryingToUnlock[Base.Name], playerWhoTriggered)
-			MarketplaceService:PromptProductPurchase(playerWhoTriggered, Products.UnlockBase.ProductId)
+			MarketplaceService:PromptProductPurchase(playerWhoTriggered, Products["Unlock Base"].ProductId)
 		end
 	end)
 

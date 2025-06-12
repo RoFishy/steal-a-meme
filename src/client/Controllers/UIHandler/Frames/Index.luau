@@ -67,7 +67,7 @@ function Index:SetMemes()
 			MemeFrame.name.Text = "???"
 		end
 	end
-	AmountFound.Text = `{#PlayerMemeIndex}/25`
+	AmountFound.Text = `{#PlayerMemeIndex}/27`
 end
 
 function Index:Stop()

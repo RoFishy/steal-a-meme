@@ -19,4 +19,5 @@ return {
 
 	-- // Memes
 	RobuxBuyMeme = Signal.new(),
+	DoubleOfflineCash = Signal.new(),
 }

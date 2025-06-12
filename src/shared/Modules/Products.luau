@@ -1,3 +1,20 @@
+-- // local funcs
+local function GetPlayerBase(Player: Player)
+	for _, Base in workspace.Bases:GetChildren() do
+		if Base:GetAttribute("Owner") == Player.Name then
+			return Base
+		end
+	end
+end
+
+local function GetRandomIndexFromDictionary(dictionary)
+	local indexes = {} -- table of all indexes in the dictionary
+	for i, _ in pairs(dictionary) do -- insert all of the indexes into the table
+		indexes[#indexes + 1] = i
+	end
+	return indexes[math.random(1, #indexes)]
+end
+
 return {
 	-- // Bases
 	BypassLockCooldown = {
@@ -111,6 +128,274 @@ return {
 		end,
 	},
 
+	-- // Robux-only memes
+	["Shrek"] = {
+		ProductId = 3306066042,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+			local HttpService = game:GetService("HttpService")
+			local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Meme = require(Utils.Meme)
+
+			local PlayerBase = GetPlayerBase(Player)
+
+			local OpenSlot = Meme:GetOpenSlot(PlayerBase.Slots)
+			if not OpenSlot then
+				ReplicatedStorage.Remotes.ShowNotification:FireClient(
+					Player,
+					"You do not have any open slots available!"
+				)
+				return
+			end
+			OpenSlot:SetAttribute("Meme", "Shrek")
+			local _meme = Meme.new("Shrek", "ROBUX", CFrame.new(0, 0, 0))
+			_meme.Model:SetAttribute("ID", HttpService:GenerateGUID(false))
+			_meme.PurchasePlayer = Player
+			_meme.CurrentStand = OpenSlot
+			task.cancel(_meme.CurrentMove)
+			_meme:AddToSlot(OpenSlot)
+		end,
+	},
+
+	["DaBaby Car"] = {
+		ProductId = 3306066199,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+			local ReplicatedStorage = game:GetService("ReplicatedStorage")
+			local HttpService = game:GetService("HttpService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Meme = require(Utils.Meme)
+
+			local PlayerBase = GetPlayerBase(Player)
+
+			local OpenSlot = Meme:GetOpenSlot(PlayerBase.Slots)
+			if not OpenSlot then
+				ReplicatedStorage.Remotes.ShowNotification:FireClient(
+					Player,
+					"You do not have any open slots available!"
+				)
+				return
+			end
+			OpenSlot:SetAttribute("Meme", "DaBaby Car")
+			local _meme = Meme.new("DaBaby Car", "ROBUX", CFrame.new(0, 0, 0))
+			_meme.Model:SetAttribute("ID", HttpService:GenerateGUID(false))
+			_meme.PurchasePlayer = Player
+			_meme.CurrentStand = OpenSlot
+			task.cancel(_meme.CurrentMove)
+			_meme:AddToSlot(OpenSlot)
+		end,
+	},
+
+	-- // Chests/crates
+	["Mythical Chest"] = {
+		ProductId = 3306060731,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+			local ReplicatedStorage = game:GetService("ReplicatedStorage")
+			local HttpService = game:GetService("HttpService")
+
+			local Spawns = require(script.Parent.Spawns)
+			local RandomMythical = GetRandomIndexFromDictionary(Spawns["Mythical"]["Spawns"])
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Meme = require(Utils.Meme)
+
+			local PlayerBase = GetPlayerBase(Player)
+
+			local OpenSlot = Meme:GetOpenSlot(PlayerBase.Slots)
+			if not OpenSlot then
+				ReplicatedStorage.Remotes.ShowNotification:FireClient(
+					Player,
+					"You do not have any open slots available!"
+				)
+				return
+			end
+
+			ReplicatedStorage.Remotes.ShowNotification:FireAllClients(
+				`{Player.Name} has received a MYTHICAL {RandomMythical} from the mythical chest!`,
+				Color3.fromRGB(255, 0, 0)
+			)
+
+			OpenSlot:SetAttribute("Meme", RandomMythical)
+			local _meme = Meme.new(RandomMythical, "Mythical", CFrame.new(0, 0, 0))
+			_meme.Model:SetAttribute("ID", HttpService:GenerateGUID(false))
+			_meme.PurchasePlayer = Player
+			_meme.CurrentStand = OpenSlot
+			task.cancel(_meme.CurrentMove)
+			_meme:AddToSlot(OpenSlot)
+		end,
+	},
+	["Meme Crate"] = {
+		ProductId = 3306060209,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+			local ReplicatedStorage = game:GetService("ReplicatedStorage")
+			local HttpService = game:GetService("HttpService")
+
+			local Spawns = {
+				["Epic"] = {
+					Rarity = 65,
+					Spawns = {
+						["Floppa"] = {
+							Price = 12500,
+							Income = 125,
+						},
+						["Nyan Cat"] = {
+							Price = 15000,
+							Income = 150,
+						},
+						["Sigma"] = {
+							Price = 25000,
+							Income = 250,
+						},
+						["Capybara"] = {
+							Price = 45000,
+							Income = 450,
+						},
+					},
+				},
+				["Legendary"] = {
+					Rarity = 30,
+					Spawns = {
+						["John Pork"] = {
+							Price = 120000,
+							Income = 1200,
+						},
+						["Walter"] = {
+							Price = 215000,
+							Income = 2150,
+						},
+						["Smurf Cat"] = {
+							Price = 300000,
+							Income = 3000,
+						},
+						["El Gato"] = {
+							Price = 375000,
+							Income = 3750,
+						},
+					},
+				},
+				["Mythical"] = {
+					Rarity = 6,
+					Spawns = {
+						["Tim Cheese"] = {
+							Price = 700000,
+							Income = 5000,
+						},
+						["Sprunki"] = {
+							Price = 1000000,
+							Income = 7500,
+						},
+						["Hampter"] = {
+							Price = 1750000,
+							Income = 12500,
+						},
+					},
+				},
+				["Omega"] = {
+					Rarity = 3,
+					Spawns = {
+						["Turi ip ip ip"] = {
+							Price = 3000000,
+							Income = 20000,
+						},
+						["Gegagedigedagedago"] = {
+							Price = 5000000,
+							Income = 35000,
+						},
+						["Tung Tung"] = {
+							Price = 10000000,
+							Income = 80000,
+						},
+					},
+				},
+				["SECRET???"] = {
+					Rarity = 1,
+					Spawns = {
+						["Chicken Jockey"] = {
+							Price = 99000000,
+							Income = 200000,
+						},
+					},
+				},
+			}
+
+			local function GetRandomRarity(LuckMultiplier: number?)
+				LuckMultiplier = LuckMultiplier or 1
+				local adjustedSpawns = {}
+				for name, value in pairs(Spawns) do
+					adjustedSpawns[name] = {
+						Rarity = value.Rarity,
+						Spawns = value.Spawns,
+					}
+
+					if name == "Epic" then
+						adjustedSpawns[name].Rarity = value.Rarity * math.min(LuckMultiplier, 2)
+					elseif name == "Mythical" then
+						adjustedSpawns[name].Rarity = value.Rarity * LuckMultiplier
+					elseif name == "Omega" or name == "SECRET???" then
+						adjustedSpawns[name].Rarity = value.Rarity * (LuckMultiplier * 1.5)
+					end
+				end
+
+				local adjustedSum = 0
+				for _, value in pairs(adjustedSpawns) do
+					adjustedSum = adjustedSum + value.Rarity
+				end
+
+				local RandomNumber = math.random(adjustedSum)
+				for Name, Value in pairs(adjustedSpawns) do
+					if RandomNumber <= Value.Rarity then
+						return Name
+					else
+						RandomNumber = RandomNumber - Value.Rarity
+					end
+				end
+			end
+
+			local ChosenRarity = GetRandomRarity()
+			local RandomSpawn = GetRandomIndexFromDictionary(Spawns[ChosenRarity].Spawns)
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Meme = require(Utils.Meme)
+
+			local PlayerBase = GetPlayerBase(Player)
+
+			local OpenSlot = Meme:GetOpenSlot(PlayerBase.Slots)
+			if not OpenSlot then
+				ReplicatedStorage.Remotes.ShowNotification:FireClient(
+					Player,
+					"You do not have any open slots available!"
+				)
+				return
+			end
+
+			ReplicatedStorage.Remotes.ShowNotification:FireAllClients(
+				`{Player.Name} has received a {ChosenRarity} {RandomSpawn} from the meme crate!`,
+				Color3.fromRGB(255, 0, 0)
+			)
+
+			OpenSlot:SetAttribute("Meme", RandomSpawn)
+			local _meme = Meme.new(RandomSpawn, ChosenRarity, CFrame.new(0, 0, 0))
+			_meme.Model:SetAttribute("ID", HttpService:GenerateGUID(false))
+			_meme.PurchasePlayer = Player
+			_meme.CurrentStand = OpenSlot
+			task.cancel(_meme.CurrentMove)
+			_meme:AddToSlot(OpenSlot)
+		end,
+	},
+
 	-- // Server luck
 	["x2 Luck"] = {
 		ProductId = 3302030360,
@@ -206,6 +491,28 @@ return {
 	},
 
 	-- // Cash
+	["Double Offline Cash"] = {
+		ProductId = 3306164962,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+			local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Signals = require(Utils.Signals)
+
+			ReplicatedStorage.Remotes.CloseAllFrames:FireClient(Player)
+			ReplicatedStorage.Remotes.ShowNotification:FireClient(
+				Player,
+				"You have doubled your offline cash successfully!",
+				Color3.fromRGB(0, 255, 0)
+			)
+
+			Signals.DoubleOfflineCash:Fire(Player)
+		end,
+	},
+
 	["Money Pack 1"] = {
 		ProductId = 3301582459,
 		Callback = function(Player: Player)

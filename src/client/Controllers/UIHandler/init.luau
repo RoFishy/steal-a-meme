@@ -170,6 +170,10 @@ end
 function UIHandler:Start()
 	--coreCall("SetCore", "ResetButtonCallback", false)
 
+	Remotes.CloseAllFrames.OnClientEvent:Connect(function()
+		self:CloseAllFrames()
+	end)
+
 	-- // signals
 	Signals.ToggleNPCDialogue:Connect(function(Options: Types.NPCDialogueOptions)
 		self:ToggleNPCDialogue(Options)
@@ -327,7 +331,7 @@ function UIHandler:ShowNotification(Text: string, Color: Color3?)
 	NotificationClone.TextColor3 = Color or Color3.fromRGB(255, 255, 255)
 	NotificationClone.Name = "0"
 
-	TweenService:Create(NotificationClone.UIScale, TweenInfo.new(0.2), { Scale = 1 }):Play()
+	TweenService:Create(NotificationClone.UIScale, TweenInfo.new(0.1), { Scale = 1 }):Play()
 
 	task.delay(5, function()
 		TweenService:Create(NotificationClone.UIScale, TweenInfo.new(0.2), { Scale = 0 }):Play()

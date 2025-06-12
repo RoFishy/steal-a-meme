@@ -486,6 +486,17 @@ function Meme:Steal(StealPlayer: Player)
 	)
 end
 
+function Meme:SetOfflineCash(AddAmount: number, FinalAmount: number)
+	local Slot = self.CurrentStand
+
+	local CollectButton: Part = Slot.Collect
+
+	self.CurrentEarned += AddAmount
+	local OfflineAttachment = CollectButton.OfflineAttachment
+	OfflineAttachment.Billboard.Frame.offline.Text = `Offline Cash: ${FormatNumber(FinalAmount)}`
+	OfflineAttachment.Billboard.Frame.Visible = true
+end
+
 function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?, value: boolean?)
 	if not self.PurchasePlayer then
 		self.PurchasePlayer = Players:FindFirstChild(Slot.Parent.Parent:GetAttribute("Owner"))
@@ -652,7 +663,7 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	self.Prompt.Triggered:Once(function(Player: Player)
 		if Player == self.PurchasePlayer then
 			if SellPrice == 0 then
-				ShowNotification:FireClient(Player, "You cannot sell a Robux pet!")
+				ShowNotification:FireClient(Player, "You cannot sell a Robux meme!")
 				return
 			end
 			Signal.IncrementCash:Fire(Player, SellPrice)
@@ -950,7 +961,11 @@ function Meme:SetupDisplayInfo()
 	local MainFrame = DisplayAttachment.Billboard.Main
 
 	MainFrame.Money.Text = `${FormatNumber(Income)}/s`
-	MainFrame.Price.Text = `${FormatNumber(Price)}`
+	if Price == 0 then
+		MainFrame.Price.Text = "???"
+	else
+		MainFrame.Price.Text = `${FormatNumber(Price)}`
+	end
 	MainFrame:FindFirstChild("Name").Text = self.Name
 end
 

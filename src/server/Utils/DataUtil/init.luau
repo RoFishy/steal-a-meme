@@ -25,6 +25,7 @@ local Remotes = ReplicatedStorage.Remotes
 -- // Utils
 local Utils = script.Parent
 local Meme = require(Utils.Meme)
+local Signals = require(Utils.Signals)
 
 -- // Store
 local PlayerStore = ProfileStore.New("PlayerStore", DataTemplate)
@@ -220,6 +221,7 @@ function DataUtil:LoadMemes(Player: Player)
 		local PlayerBase = GetPlayerBase(Player)
 
 		local Slots = Profile.Data.Slots
+		local CurrentOfflineCash = 0
 		for ID, Slot in Slots do
 			local OpenSlot = PlayerBase.Slots:FindFirstChild(Slot.Stand) or Meme:GetOpenSlot(PlayerBase.Slots)
 			if OpenSlot:GetAttribute("Meme") then
@@ -234,8 +236,18 @@ function DataUtil:LoadMemes(Player: Player)
 			Profile.Data.Slots[ID].Model = _meme.Model
 			task.cancel(_meme.CurrentMove)
 			local offlineEarnings = self:CalculateOfflineEarnings(Player, _meme)
+			CurrentOfflineCash += offlineEarnings
 			_meme:AddToSlot(OpenSlot, true, offlineEarnings)
+
+			Signals.DoubleOfflineCash:Connect(function(_Player: Player)
+				if Player == _Player then
+					_meme:SetOfflineCash(offlineEarnings, offlineEarnings * 2)
+				end
+			end)
 		end
+		task.delay(3, function()
+			Remotes.DoubleCashFrame:FireClient(Player, CurrentOfflineCash)
+		end)
 	end
 end
 

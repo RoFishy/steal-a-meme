@@ -52,6 +52,14 @@
         {
             "Name": "ClaimFreePet",
             "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "DoubleCashFrame",
+            "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "CloseAllFrames",
+            "ClassName": "RemoteEvent"
         }
     ]
 }
