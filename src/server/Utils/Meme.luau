@@ -199,6 +199,7 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo:
 	return self
 end
 
+
 function Meme:SetCollisionGroup(NewGroup: string)
 	for _, Item: BasePart in self.Model:GetDescendants() do
 		if Item:IsA("BasePart") then
@@ -273,6 +274,11 @@ function Meme:Steal(StealPlayer: Player)
 
 	StealPlayer:SetAttribute("Stealing", true)
 	local OGWalkSpeed = StealPlayer.Character.Humanoid.WalkSpeed
+	local speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
+	if speedOffset then
+		OGWalkSpeed -= speedOffset
+	end
+
 	StealPlayer.Character.Humanoid.WalkSpeed *= 0.8
 
 	self.BeingStolen = true
@@ -355,7 +361,13 @@ function Meme:Steal(StealPlayer: Player)
 				self.CurrentStand = OpenSlot
 				TogglePrompt:FireAllClients(self.Prompt, true)
 				self.BeingStolen = false
-				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
+
+				local speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
+				if speedOffset then
+					StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed + speedOffset
+				else
+					StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
+				end
 
 				self:AddToSlot(OpenSlot)
 			end
@@ -402,7 +414,13 @@ function Meme:Steal(StealPlayer: Player)
 			
 			local DataUtil = require(Utils.DataUtil)
 			DataUtil:IncrementSteals(StealPlayer, 1)
-			StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
+			
+			local speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
+			if speedOffset then
+				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed + speedOffset
+			else
+				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
+			end
 
 			TogglePrompt:FireAllClients(self.Prompt, true)
 		end
@@ -474,6 +492,26 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 		self.PurchasePlayer = Players:FindFirstChild(Slot.Parent.Parent:GetAttribute("Owner"))
 	end
 
+	if not self.PurchasePlayer then
+		local parts = workspace:GetPartsInPart(self.RootPart)
+		for _, part in pairs(parts) do
+			if part.Parent.Name == "CollectPart" then
+				local base = part.Parent.Parent.Parent.Parent
+				local owner = base:GetAttribute("Owner")
+				local player = owner and Players:FindFirstChild(owner)
+				if player then
+					self.PurchasePlayer = player
+				end
+				break
+			end
+		end
+
+		if not self.PurchasePlayer then
+			warn("Could not add to slot because purchase player is invalid.", self.Name)
+			self:Destroy()
+		end
+	end
+
 	if self.BeingStolen then
 		warn("Meme not added to slot because it's being stolen", self.PurchasePlayer)
 		return
@@ -522,11 +560,15 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	self.Prompt.HoldDuration = 2
 	if LoadData then
 		task.delay(5, function()
-			EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+			if self.PurchasePlayer then
+				EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+			end
 		end)
 	else
 		task.delay(1, function()
-			EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+			if self.PurchasePlayer then
+				EditPrompt:FireClient(self.PurchasePlayer, self.Prompt, "Sell", `Sell ${self.Name} for ${SellPrice}`, nil)
+			end
 		end)
 	end
 
@@ -691,6 +733,7 @@ function Meme:SetupConnections()
 				end
 
 				self.Model.Humanoid.WalkSpeed = 10
+
 				self:MoveTo(PlayerBase.Components.CollectZone.CollectPart.PrimaryPart.Position)
 				self.PurchasePlayer = Player
 

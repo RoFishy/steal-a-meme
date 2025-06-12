@@ -260,7 +260,7 @@ function DataUtil:GetCurrentMemes(Player: Player)
 end
 
 function DataUtil:GetCurrentMemeReferences()
-	return Meme
+	return MemeReferences
 end
 
 function DataUtil:GetData(Player: Player): Types.UserData
