@@ -247,7 +247,7 @@ end
 
 function DataUtil:RemoveMemeFromPlayer(Player: Player, MemeObj)
 	local Profile = Profiles[Player]
-	if Profile then
+	if Profile and MemeObj.Model:GetAttribute("ID") then
 		Profile.Data.Slots[MemeObj.Model:GetAttribute("ID")] = nil
 	end
 end
@@ -260,7 +260,7 @@ function DataUtil:GetCurrentMemes(Player: Player)
 end
 
 function DataUtil:GetCurrentMemeReferences()
-	return Meme
+	return MemeReferences
 end
 
 function DataUtil:GetData(Player: Player): Types.UserData
