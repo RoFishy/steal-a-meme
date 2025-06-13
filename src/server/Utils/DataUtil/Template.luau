@@ -11,7 +11,11 @@ local DataTemplate: Types.UserData = {
 	LockTime = 60,
 	Slots = {},
 	LastJoin = nil,
-	Index = {},
+	Index = {
+		Normal = {},
+		Golden = {},
+		Diamond = {},
+	},
 	NewPlayer = true,
 	ClaimedVIPPet = true,
 	ClaimedFreePet = false,

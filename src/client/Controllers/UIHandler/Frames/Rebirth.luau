@@ -123,6 +123,11 @@ function Rebirth:UpdateRewards()
 	self:RemoveOldTools()
 	local CurrentToolFrame = RewardsHolder.Tool
 	local currentIndex = 1
+	if #NewTools == 0 then
+		CurrentToolFrame.Visible = false
+		return
+	end
+	CurrentToolFrame.Visible = true
 	for _, ToolName in NewTools do
 		CurrentToolFrame:FindFirstChild("name").Text = ToolName
 		CurrentToolFrame.Icon.Image = Tools[ToolName].Image

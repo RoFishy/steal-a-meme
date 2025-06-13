@@ -41,4 +41,14 @@ return {
 			},
 		},
 	},
+	[5] = {
+		Cost = 1_000_000_000,
+		Rewards = {
+			Multiplier = 3.5,
+			LockBoost = 40,
+			NewTools = {
+				"Killer Bee Launcher",
+			},
+		},
+	},
 }

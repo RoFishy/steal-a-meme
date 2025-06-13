@@ -1,6 +1,6 @@
 -- // Services
 local Players = game:GetService("Players")
---local RunService = game:GetService("RunService")
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -273,7 +273,9 @@ function UIHandler:Start()
 	end)
 
 	-- // e
-	self:HandleUIStroke()
+	RunService.RenderStepped:Connect(function()
+		self:HandleUIStroke()
+	end)
 end
 
 function UIHandler:ToggleNPCDialogue(Options: Types.NPCDialogueOptions)

@@ -36,10 +36,11 @@ return {
 		Callback = function(Player: Player)
 			local hdMain = require(game:GetService("ReplicatedStorage"):WaitForChild("HDAdminSetup")):GetMain()
 			local hd = hdMain:GetModule("API")
-			local rank = "Mod"
+			local plrRankId = hd:GetRank(Player)
+			local rank = "VIP"
 			local rankType = "Server"
 			local rankId = tonumber(rank) or hd:GetRankId(rank)
-			if Player.Name == "xRo_Fishy" then
+			if plrRankId > rankId then
 				return
 			end
 			hd:SetRank(Player, rankId, rankType)

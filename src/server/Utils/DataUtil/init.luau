@@ -48,6 +48,13 @@ local function GetPlayerBase(Player: Player)
 		end
 	end
 end
+local function GetDictionaryLength(Dictionary: {})
+	local i = 0
+	for _, _ in Dictionary do
+		i += 1
+	end
+	return i
+end
 
 -- // Module
 local DataUtil = {}
@@ -59,7 +66,6 @@ function DataUtil.new(Player: Player)
 		end,
 	})
 	if Profile ~= nil then
-		print("theres a profile gang!")
 		Profile:AddUserId(Player.UserId)
 		Profile:Reconcile()
 
@@ -70,6 +76,19 @@ function DataUtil.new(Player: Player)
 
 		if Player.Parent == Players then
 			Profiles[Player] = Profile
+			if GetDictionaryLength(Profile.Data.Index) > 3 and GetDictionaryLength(Profile.Data.Index.Normal) == 0 then
+				local normalTable = {}
+				for index, value in Profile.Data.Index do
+					if typeof(index) == "string" then
+						continue
+					end
+					normalTable[index] = value
+				end
+				Profile.Data.Index = {}
+				Profile.Data.Index["Normal"] = normalTable
+				Profile.Data.Index.Golden = {}
+				Profile.Data.Index.Diamond = {}
+			end
 			DataUtil:_SetupLeaderstats(Player)
 			DataUtil:LoadMemes(Player)
 		else
@@ -194,23 +213,30 @@ function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
 	if Profile then
 		Profile.Data.Slots[MemeObj.Model:GetAttribute("ID")] = {
 			Name = MemeObj.Name,
-			Info = MemeObj.Info,
+			--Info = MemeObj.Info,
 			Rarity = MemeObj.Rarity,
 			Stand = MemeObj.CurrentStand.Name,
+			Special = MemeObj.Special,
 
 			-- // cleanup on game end:
 			--Model = MemeObj.Model,
 		}
 		MemeReferences[MemeObj.Model:GetAttribute("ID")] = MemeObj.Model
-		if not table.find(Profile.Data.Index, MemeObj.Name) then
+
+		local Table = Profile.Data.Index.Normal
+		if MemeObj.Special then
+			Table = Profile.Data.Index[MemeObj.Special]
+		end
+		if not table.find(Table, MemeObj.Name) then
 			local _replica = Replicas[Player]
-			table.insert(Profile.Data.Index, MemeObj.Name)
+			table.insert(Table, MemeObj.Name)
 			_replica:Set({ "Index" }, Profile.Data.Index)
-			Remotes.ShowNotification:FireClient(
-				Player,
-				"You have discovered the " .. MemeObj.Name .. " Meme! It has been added to your Index.",
-				Color3.fromRGB(0, 217, 255)
-			)
+			local Text = "You have discovered the " .. MemeObj.Name .. " Meme! It has been added to your Index."
+			if MemeObj.Special then
+				Text =
+					`You have discovered the {string.upper(MemeObj.Special)} {MemeObj.Name}! It has been added to your {MemeObj.Special} Index.`
+			end
+			Remotes.ShowNotification:FireClient(Player, Text, Color3.fromRGB(0, 217, 255))
 		end
 	end
 end
@@ -228,12 +254,12 @@ function DataUtil:LoadMemes(Player: Player)
 				OpenSlot = Meme:GetOpenSlot(PlayerBase.Slots)
 			end
 			OpenSlot:SetAttribute("Meme", Slot.Name)
-			local _meme = Meme.new(Slot.Name, "", CFrame.new(0, 0, 0), Slot)
+			local _meme = Meme.new(Slot.Name, Slot.Rarity, CFrame.new(0, 0, 0), Slot.Special, true)
 			MemeReferences[ID] = _meme.Model
 			_meme.Model:SetAttribute("ID", ID)
 			_meme.PurchasePlayer = Player
 			_meme.CurrentStand = OpenSlot
-			Profile.Data.Slots[ID].Model = _meme.Model
+			--Profile.Data.Slots[ID].Model = _meme.Model
 			task.cancel(_meme.CurrentMove)
 			local offlineEarnings = self:CalculateOfflineEarnings(Player, _meme)
 			CurrentOfflineCash += offlineEarnings

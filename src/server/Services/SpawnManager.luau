@@ -33,6 +33,10 @@ local GuaranteedRequirements = {
 
 -- // Const
 local SPAWN_INTERVAL = 5
+local SPECIAL_CHANCES = {
+	Golden = 25,
+	Diamond = 10,
+}
 
 -- // Variables
 local CurrentMemes = {}
@@ -63,6 +67,28 @@ local function GetNameFromValue(Dictionary, Value)
 			return key
 		end
 	end
+end
+
+local function GetSpecialChance()
+	local RandomNumber = math.random(1, 100)
+
+	local LowestPotentialName, LowestPotentialValue = nil, nil
+
+	for Name, Chance in SPECIAL_CHANCES do
+		if RandomNumber <= Chance then
+			if not LowestPotentialValue then
+				LowestPotentialValue = Chance
+				LowestPotentialName = Name
+				continue
+			end
+			if Chance < LowestPotentialValue then
+				LowestPotentialValue = Chance
+				LowestPotentialName = Name
+			end
+		end
+	end
+
+	return LowestPotentialName
 end
 
 function Format(Int)
@@ -135,10 +161,11 @@ function SpawnManager:Start()
 		--local Rarity = "Common"
 		local RandomSpawn =
 			IndexDictionary(Spawns[Rarity]["Spawns"], math.random(1, GetDictionaryLength(Spawns[Rarity]["Spawns"])))
+		local Chance = GetSpecialChance()
 
 		local ModelId = HttpService:GenerateGUID(false)
 		CurrentMemes[ModelId] =
-			Meme.new(GetNameFromValue(Spawns[Rarity]["Spawns"], RandomSpawn), Rarity, StartPart.CFrame)
+			Meme.new(GetNameFromValue(Spawns[Rarity]["Spawns"], RandomSpawn), Rarity, StartPart.CFrame, Chance)
 		CurrentMemes[ModelId].Model:SetAttribute("ID", ModelId)
 
 		if Rarity == "Mythical" or Rarity == "Omega" or Rarity == "SECRET???" then

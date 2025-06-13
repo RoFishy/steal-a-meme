@@ -25,8 +25,22 @@ local Signal = require(Utils.Signals)
 local SpawnsFolder = ReplicatedStorage.Spawns
 local BasesFolder = workspace.Bases
 
+local SpecialFolder = ReplicatedStorage.Objects.Special
+
 -- // Constants
 local NUMBER_SUFFIX = { "K", "M", "B", "T", "q", "Q", "s", "S", "O", "N", "d", "U", "D" }
+local STEAL_ANIM_ID = "rbxassetid://76125639884956"
+
+local SpecialInfo = {
+	Golden = {
+		IncomeMultiplier = 1.25,
+		Color = Color3.fromRGB(255, 187, 0),
+	},
+	Diamond = {
+		IncomeMultiplier = 1.5,
+		Color = Color3.fromRGB(0, 174, 255),
+	},
+}
 
 -- // Local Functions
 local function FormatNumber(n)
@@ -142,14 +156,8 @@ end
 local Meme = {}
 Meme.__index = Meme
 
-function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo: {}?)
-	local MemeInfo
-	if CustomInfo then
-		Type = CustomInfo.Rarity
-		MemeInfo = CustomInfo.Info
-	else
-		MemeInfo = Spawns[Type]["Spawns"][Name]
-	end
+function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, Special: "Golden" | "Diamond"?, LoadData: boolean?)
+	local MemeInfo = Spawns[Type]["Spawns"][Name]
 	local RarityFolder = SpawnsFolder:FindFirstChild(Type)
 	assert(RarityFolder, "Rarity folder not found")
 
@@ -160,6 +168,7 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo:
 	self.Model = MemeModel:Clone()
 	self.Name = Name
 	self.Info = MemeInfo
+	self.Special = Special
 	self.PurchasePlayer = nil
 	self.CurrentEarned = 0
 	self.Connections = {}
@@ -172,6 +181,8 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo:
 	self.Redirects = true
 	self.CashConnection = false
 	self.RootPart = self.Model.HumanoidRootPart
+
+	self.RootPart.Anchored = false
 
 	if not self.Model.PrimaryPart then
 		self.Model.PrimaryPart = self.RootPart
@@ -186,6 +197,10 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, CustomInfo:
 	self.Model:PivotTo(SpawnLocation)
 
 	self:MoveTo(workspace.ConveyorSystem.End.Position)
+
+	if Special then
+		self:SetupSpecialMeme(LoadData)
+	end
 
 	self:SetupDisplayInfo()
 	self:SetupConnections()
@@ -202,6 +217,36 @@ function Meme:SetCollisionGroup(NewGroup: string)
 		if Item:IsA("BasePart") then
 			Item.CollisionGroup = NewGroup
 		end
+	end
+end
+
+function Meme:SetupSpecialMeme(LoadData: boolean?)
+	local Folder = SpecialFolder:FindFirstChild(self.Special)
+	assert(Folder, "Special folder not found")
+
+	self.Info.Income *= SpecialInfo[self.Special].IncomeMultiplier
+	self.Info.Income = math.ceil(self.Info.Income)
+
+	local DisplayAttachment = self.RootPart.Attachment
+	local MainFrame = DisplayAttachment.Billboard.Main
+
+	local SpecialText = Folder:FindFirstChild("Text"):Clone()
+	SpecialText.Parent = MainFrame
+
+	local VFX = Folder:FindFirstChild("VFX")
+	for _, Effect in VFX:GetChildren() do
+		Effect:Clone().Parent = self.RootPart
+	end
+
+	self.Model.Parent = workspace[self.Special .. "Memes"]
+	--local Highlight = Folder:FindFirstChild("Highlight"):Clone()
+	--Highlight.Parent = self.Model
+
+	if not LoadData then
+		ShowNotification:FireAllClients(
+			`A {string.upper(self.Special)} {self.Name} Meme has spawned!`,
+			SpecialInfo[self.Special].Color
+		)
 	end
 end
 
@@ -277,6 +322,12 @@ function Meme:Steal(StealPlayer: Player)
 	end
 
 	StealPlayer.Character.Humanoid.WalkSpeed *= 0.8
+	local Animation = Instance.new("Animation")
+	Animation.AnimationId = STEAL_ANIM_ID
+
+	local Animator: Animator = StealPlayer.Character.Humanoid.Animator
+	local LoadedAnimation = Animator:LoadAnimation(Animation)
+	LoadedAnimation:Play()
 
 	self.BeingStolen = true
 	Signal.RemoveMemeFromPlayer:Fire(OriginalPlayer, self)
@@ -300,9 +351,11 @@ function Meme:Steal(StealPlayer: Player)
 	end
 
 	self.Model:PivotTo(
-		StealPlayer.Character.HumanoidRootPart.CFrame
-			+ (StealPlayer.Character.HumanoidRootPart.CFrame.LookVector * 3)
-			+ (StealPlayer.Character.HumanoidRootPart.CFrame.UpVector * 3)
+		(
+			StealPlayer.Character.HumanoidRootPart.CFrame
+			--+ (StealPlayer.Character.HumanoidRootPart.CFrame.LookVector * 3)
+			+ (StealPlayer.Character.HumanoidRootPart.CFrame.UpVector * 4)
+		) * CFrame.Angles(math.rad(90), 0, 0)
 	)
 
 	local Weld = Instance.new("WeldConstraint")
@@ -332,6 +385,9 @@ function Meme:Steal(StealPlayer: Player)
 				return
 			end
 
+			LoadedAnimation:Stop()
+			Animation:Destroy()
+
 			self.PurchasePlayer = OriginalPlayer
 			StealPlayer:SetAttribute("Stealing", nil)
 
@@ -353,6 +409,7 @@ function Meme:Steal(StealPlayer: Player)
 			self.BeingStolen = false
 
 			local _speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
+
 			if _speedOffset then
 				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed + _speedOffset
 			else
@@ -384,6 +441,9 @@ function Meme:Steal(StealPlayer: Player)
 					warn("SmackPlayer failed, original player no longer has an open slot")
 					return
 				end
+
+				LoadedAnimation:Stop()
+				Animation:Destroy()
 
 				self.PurchasePlayer = OriginalPlayer
 				StealPlayer:SetAttribute("Stealing", nil)
@@ -429,6 +489,8 @@ function Meme:Steal(StealPlayer: Player)
 			--task.delay(4, function()
 			--db = false
 			--end)
+			LoadedAnimation:Stop()
+			Animation:Destroy()
 			pcall(function()
 				EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name)
 			end)
@@ -476,6 +538,8 @@ function Meme:Steal(StealPlayer: Player)
 				pcall(function()
 					EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name)
 				end)
+				LoadedAnimation:Stop()
+				Animation:Destroy()
 
 				local Slots = OriginalPlayerBase.Slots
 				local OpenSlot = self:GetOpenSlot(Slots)
@@ -507,7 +571,8 @@ function Meme:Steal(StealPlayer: Player)
 			pcall(function()
 				EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name)
 			end)
-
+			LoadedAnimation:Stop()
+			Animation:Destroy()
 			StealPlayer:SetAttribute("Stealing", nil)
 
 			local Slots = OriginalPlayerBase.Slots
@@ -589,17 +654,16 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 		* CFrame.new(Vector3.new(0, Slot.Stand.Size.Y / 2, 0) + Vector3.new(0, heightOffset, 0))
 		* CFrame.Angles(0, math.rad(-90), 0)
 
-	self.Model:PivotTo(targetPivot)
 	self.RootPart.Anchored = false
 	self.RootPart.AssemblyLinearVelocity = Vector3.zero
 	self.RootPart.AssemblyAngularVelocity = Vector3.zero
 
 	self.Model:PivotTo(targetPivot)
 
-	task.delay(0.1, function()
-		self.Model:PivotTo(targetPivot)
+	task.delay(0.3, function()
+		--self.Model:PivotTo(targetPivot)
 		self.RootPart.Anchored = true
-		self.Model:PivotTo(targetPivot)
+		--self.Model:PivotTo(targetPivot)
 	end)
 
 	pcall(function()
