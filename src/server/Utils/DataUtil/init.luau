@@ -16,8 +16,8 @@ local Packages = ReplicatedStorage.Packages
 local Replica = require(Packages.Replica)
 
 -- // Ordered DS
-local StealsOrderedDS = DataStoreService:GetOrderedDataStore("OrderedSteals")
-local CashOrderedDS = DataStoreService:GetOrderedDataStore("OrderedCash")
+local StealsOrderedDS = DataStoreService:GetOrderedDataStore("OrderedSteals_v1")
+local CashOrderedDS = DataStoreService:GetOrderedDataStore("OrderedCash_v1")
 
 -- // Remotes
 local Remotes = ReplicatedStorage.Remotes

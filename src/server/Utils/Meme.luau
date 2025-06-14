@@ -198,7 +198,7 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, Special: "G
 
 	self:MoveTo(workspace.ConveyorSystem.End.Position)
 
-	if Special then
+	if Special and (Special == "Golden" or Special == "Diamond") then
 		self:SetupSpecialMeme(LoadData)
 	end
 
@@ -224,8 +224,9 @@ function Meme:SetupSpecialMeme(LoadData: boolean?)
 	local Folder = SpecialFolder:FindFirstChild(self.Special)
 	assert(Folder, "Special folder not found")
 
-	self.Info.Income *= SpecialInfo[self.Special].IncomeMultiplier
-	self.Info.Income = math.ceil(self.Info.Income)
+	local Multiplier = SpecialInfo[self.Special].IncomeMultiplier
+
+	self.Info.Income = math.ceil(self.Info.Income * Multiplier)
 
 	local DisplayAttachment = self.RootPart.Attachment
 	local MainFrame = DisplayAttachment.Billboard.Main

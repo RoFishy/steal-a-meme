@@ -99,7 +99,6 @@ local ZOOMED_IN_FOV = 50
 --local MAX_RETRIES = 8
 
 -- // Vars
-local Debounce = false
 local UIStrokes = {}
 
 -- // Local Functions
@@ -385,16 +384,6 @@ function UIHandler:HandleUIStroke()
 end
 
 function UIHandler:OpenFrame(Frame: string)
-	if Debounce == true then
-		return
-	end
-	for _, _Frame in Frames:GetChildren() do
-		if _Frame.Visible == true and _Frame.Name ~= Frame then
-			self:CloseAllFrames()
-		end
-	end
-
-	Debounce = true
 	TweenService:Create(Blur, TweenInfo.new(0.4), { Size = 25 }):Play()
 	TweenService:Create(BlackFrame, TweenInfo.new(0.4), { BackgroundTransparency = 0.4 }):Play()
 	TweenService:Create(Camera, TweenInfo.new(0.4), { FieldOfView = ZOOMED_IN_FOV }):Play()
@@ -402,12 +391,10 @@ function UIHandler:OpenFrame(Frame: string)
 	Frame = Frames:FindFirstChild(Frame) :: Frame
 	if Frame then
 		if Frame.Visible == true then
-			Debounce = false
 			self:CloseAllFrames()
 			return
-		else
-			self:CloseAllFrames()
 		end
+		self:CloseAllFrames()
 		local FrameModule = FrameModules:FindFirstChild(Frame.Name)
 		local OriginalPosition = Frame:GetAttribute("OriginalPosition")
 
@@ -423,7 +410,7 @@ function UIHandler:OpenFrame(Frame: string)
 			FrameModule = require(FrameModule)
 			FrameModule:Start()
 		end
-		Debounce = false
+		--Debounce = false
 	else
 		print("No frame found!")
 		return
@@ -431,10 +418,6 @@ function UIHandler:OpenFrame(Frame: string)
 end
 
 function UIHandler:CloseAllFrames()
-	if Debounce == true then
-		return
-	end
-	Debounce = true
 	for _, Frame in Frames:GetChildren() do
 		if Frame.Visible == true then
 			local OriginalPosition = Frame:GetAttribute("OriginalPosition")
@@ -455,7 +438,6 @@ function UIHandler:CloseAllFrames()
 			OutTween.Completed:Wait()
 			Frame.Visible = false
 			Frame.Position = OriginalPosition
-			Debounce = false
 			Signals.ClosedFrame:Fire()
 			local FrameModule = FrameModules:FindFirstChild(Frame.Name)
 			if FrameModule then
