@@ -250,10 +250,14 @@ function DataUtil:LoadMemes(Player: Player)
 		local CurrentOfflineCash = 0
 		for ID, Slot in Slots do
 			local OpenSlot = PlayerBase.Slots:FindFirstChild(Slot.Stand) or Meme:GetOpenSlot(PlayerBase.Slots)
-			if OpenSlot:GetAttribute("Meme") then
+			if OpenSlot and OpenSlot:GetAttribute("Meme") then
 				OpenSlot = Meme:GetOpenSlot(PlayerBase.Slots)
 			end
+			if not OpenSlot then
+				continue
+			end
 			OpenSlot:SetAttribute("Meme", Slot.Name)
+			print(Slot.Special)
 			local _meme = Meme.new(Slot.Name, Slot.Rarity, CFrame.new(0, 0, 0), Slot.Special, true)
 			MemeReferences[ID] = _meme.Model
 			_meme.Model:SetAttribute("ID", ID)

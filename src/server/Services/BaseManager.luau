@@ -449,7 +449,7 @@ function BaseManager:ResetBase(Base: string)
 		local Name = Meme.Name
 		local Stand = Meme.Stand
 		Base.Slots[Stand]:SetAttribute("Meme", nil)
-		for _, _Meme in workspace:GetChildren() do
+		for _, _Meme in workspace:GetDescendants() do
 			if _Meme.Name == Name then
 				if _Meme:GetAttribute("ID") == ID then
 					task.spawn(function()
