@@ -24,6 +24,7 @@ function PlayerHandler:Start()
 
 		if StealAnim then
 			pcall(function()
+				StealAnim:Stop()
 				StealAnim:Destroy()
 				StealAnim = nil
 			end)
