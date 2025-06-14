@@ -322,12 +322,6 @@ function Meme:Steal(StealPlayer: Player)
 	end
 
 	StealPlayer.Character.Humanoid.WalkSpeed *= 0.8
-	local Animation = Instance.new("Animation")
-	Animation.AnimationId = STEAL_ANIM_ID
-
-	local Animator: Animator = StealPlayer.Character.Humanoid.Animator
-	local LoadedAnimation = Animator:LoadAnimation(Animation)
-	LoadedAnimation:Play()
 
 	self.BeingStolen = true
 	Signal.RemoveMemeFromPlayer:Fire(OriginalPlayer, self)
@@ -385,8 +379,8 @@ function Meme:Steal(StealPlayer: Player)
 				return
 			end
 
-			LoadedAnimation:Stop()
-			Animation:Destroy()
+			-- LoadedAnimation:Stop()
+			-- Animation:Destroy()
 
 			self.PurchasePlayer = OriginalPlayer
 			StealPlayer:SetAttribute("Stealing", nil)
@@ -442,8 +436,8 @@ function Meme:Steal(StealPlayer: Player)
 					return
 				end
 
-				LoadedAnimation:Stop()
-				Animation:Destroy()
+				-- LoadedAnimation:Stop()
+				-- Animation:Destroy()
 
 				self.PurchasePlayer = OriginalPlayer
 				StealPlayer:SetAttribute("Stealing", nil)
@@ -489,8 +483,8 @@ function Meme:Steal(StealPlayer: Player)
 			--task.delay(4, function()
 			--db = false
 			--end)
-			LoadedAnimation:Stop()
-			Animation:Destroy()
+			-- LoadedAnimation:Stop()
+			-- Animation:Destroy()
 			pcall(function()
 				EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name)
 			end)
@@ -538,8 +532,8 @@ function Meme:Steal(StealPlayer: Player)
 				pcall(function()
 					EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name)
 				end)
-				LoadedAnimation:Stop()
-				Animation:Destroy()
+				-- LoadedAnimation:Stop()
+				-- Animation:Destroy()
 
 				local Slots = OriginalPlayerBase.Slots
 				local OpenSlot = self:GetOpenSlot(Slots)
@@ -571,8 +565,8 @@ function Meme:Steal(StealPlayer: Player)
 			pcall(function()
 				EditPrompt:FireAllClients(self.Prompt, "Steal", self.Name)
 			end)
-			LoadedAnimation:Stop()
-			Animation:Destroy()
+			-- LoadedAnimation:Stop()
+			-- Animation:Destroy()
 			StealPlayer:SetAttribute("Stealing", nil)
 
 			local Slots = OriginalPlayerBase.Slots

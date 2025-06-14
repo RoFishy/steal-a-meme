@@ -25,6 +25,10 @@ return {
 				Price = 750,
 				Income = 7,
 			},
+			["Burbaloni Lulliloli"] = {
+				Price = 900,
+				Income = 9,
+			},
 		},
 	},
 	["Rare"] = {
@@ -50,6 +54,10 @@ return {
 				Price = 7500,
 				Income = 75,
 			},
+			["Bombardilo Crocodilo"] = {
+				Price = 10000,
+				Income = 100,
+			},
 		},
 	},
 	["Epic"] = {
@@ -70,6 +78,10 @@ return {
 			["Capybara"] = {
 				Price = 45000,
 				Income = 450,
+			},
+			["BrrBrrPatapim"] = {
+				Price = 75_000,
+				Income = 750,
 			},
 		},
 	},
@@ -92,6 +104,10 @@ return {
 				Price = 375000,
 				Income = 3750,
 			},
+			["Tralalero Tralala"] = {
+				Price = 500_000,
+				Income = 4250,
+			},
 		},
 	},
 	["Mythical"] = {
@@ -108,6 +124,10 @@ return {
 			["Hampter"] = {
 				Price = 1750000,
 				Income = 12500,
+			},
+			["Ballerina Cappuccina"] = {
+				Price = 2_250_000,
+				Income = 15000,
 			},
 		},
 	},
@@ -126,14 +146,22 @@ return {
 				Price = 10000000,
 				Income = 80000,
 			},
+			["Cappuccino Assassino"] = {
+				Price = 40_000_000,
+				Income = 110_000,
+			},
 		},
 	},
 	["SECRET???"] = {
 		Rarity = 0.05,
 		Spawns = {
 			["Chicken Jockey"] = {
-				Price = 99000000,
+				Price = 99_000_000,
 				Income = 200000,
+			},
+			["Chimpanzini Bananini"] = {
+				Price = 250_000_000,
+				Income = 300_000,
 			},
 		},
 	},
