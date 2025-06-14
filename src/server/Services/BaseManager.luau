@@ -92,23 +92,19 @@ function BaseManager:Start()
 		local LockButton: Part = Components.LockButton
 		local RobuxLockButton: Part = Components.LockButtonRBX
 		local CollectArea: Model = Components.CollectZone.CollectPart
+		local CollisionPart: BasePart = Components.CollectZone.CollisionPart
 
-		for _, Part in CollectArea:GetChildren() do
-			if CollectArea.PrimaryPart == Part then
-				continue
-			end
-			Part.Touched:Connect(function(hit: Part)
-				local Player = Players:GetPlayerFromCharacter(hit.Parent)
-				if Player then
-					if self.Bases[Base.Name].Locked == false then
-						return
-					end
-					if not table.find(self.WhitelistedPlayers[Base.Name], Player) then
-						Player:Kick("Anticheat - Attempted to noclip into wrong base.")
-					end
+		CollisionPart.Touched:Connect(function(hit: Part)
+			local Player = Players:GetPlayerFromCharacter(hit.Parent)
+			if Player then
+				if self.Bases[Base.Name].Locked == false then
+					return
 				end
-			end)
-		end
+				if not table.find(self.WhitelistedPlayers[Base.Name], Player) then
+					Player:Kick("Anticheat - Attempted to noclip into wrong base.")
+				end
+			end
+		end)
 
 		LockButton.Touched:Connect(function(Hit: Part)
 			local Player = Players:GetPlayerFromCharacter(Hit.Parent)

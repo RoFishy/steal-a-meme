@@ -77,7 +77,7 @@ function PlayerManager:Start()
 
 		Reconnect()
 
-		Player.CharacterAdded:Connect(function()
+		local function characterAdded(character)
 			if ItemTools:FindFirstChild(Player.Name) then
 				for _, item in ItemTools[Player.Name]:GetChildren() do
 					item.Parent = Player:WaitForChild("Backpack")
@@ -88,8 +88,20 @@ function PlayerManager:Start()
 
 				BaseManager:TeleportPlayerToBase(Player)
 			end
-		end)
+
+			character.ChildAdded:Connect(function(tool)
+				if tool:IsA("Tool") and Player:GetAttribute("Stealing") then
+					tool.Parent = Player.Backpack
+				end
+			end)
+		end
+
+		if Player.Character then
+			characterAdded(Player.Character)
+		end
+		Player.CharacterAdded:Connect(characterAdded)
 	end)
+	
 	Players.PlayerRemoving:Connect(function(Player)
 		local Base = BaseManager:GetBaseNameFromPlayer(Player)
 		if Base then
