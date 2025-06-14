@@ -16,8 +16,8 @@ local Packages = ReplicatedStorage.Packages
 local Replica = require(Packages.Replica)
 
 -- // Ordered DS
-local StealsOrderedDS = DataStoreService:GetOrderedDataStore("OrderedSteals_v1")
-local CashOrderedDS = DataStoreService:GetOrderedDataStore("OrderedCash_v1")
+local StealsOrderedDS = DataStoreService:GetOrderedDataStore("OrderedSteals")
+local CashOrderedDS = DataStoreService:GetOrderedDataStore("OrderedCash")
 
 -- // Remotes
 local Remotes = ReplicatedStorage.Remotes
@@ -88,6 +88,9 @@ function DataUtil.new(Player: Player)
 				Profile.Data.Index["Normal"] = normalTable
 				Profile.Data.Index.Golden = {}
 				Profile.Data.Index.Diamond = {}
+			end
+			if Profile.Data.Cash > 1_000_000_000_000 then
+				Profile.Data.Cash = 500
 			end
 			DataUtil:_SetupLeaderstats(Player)
 			DataUtil:LoadMemes(Player)

@@ -3,8 +3,8 @@ local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 
 -- // Ordered DS
-local StealsOrderedDS = DataStoreService:GetOrderedDataStore("OrderedSteals_v1")
-local CashOrderedDS = DataStoreService:GetOrderedDataStore("OrderedCash_v1")
+local StealsOrderedDS = DataStoreService:GetOrderedDataStore("OrderedSteals")
+local CashOrderedDS = DataStoreService:GetOrderedDataStore("OrderedCash")
 
 -- // const
 local REFRESH_INTERVAL = 120

@@ -167,7 +167,7 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, Special: "G
 	local self = setmetatable({}, Meme)
 	self.Model = MemeModel:Clone()
 	self.Name = Name
-	self.Info = MemeInfo
+	self.Info = table.clone(MemeInfo)
 	self.Special = Special
 	self.PurchasePlayer = nil
 	self.CurrentEarned = 0
