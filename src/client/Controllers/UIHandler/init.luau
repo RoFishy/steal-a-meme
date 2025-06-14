@@ -409,7 +409,13 @@ function UIHandler:OpenFrame(Frame: string)
 			self:CloseAllFrames()
 		end
 		local FrameModule = FrameModules:FindFirstChild(Frame.Name)
-		local OriginalPosition = Frame.Position
+		local OriginalPosition = Frame:GetAttribute("OriginalPosition")
+
+		if not OriginalPosition then
+			OriginalPosition = Frame.Position
+			Frame:SetAttribute("OriginalPosition", OriginalPosition)
+		end
+
 		Frame.Position = Frame.Position + UDim2.fromScale(0, 0.5)
 		Frame.Visible = true
 		TweenService:Create(Frame, TweenInfo.new(0.2), { Position = OriginalPosition }):Play()
@@ -431,7 +437,12 @@ function UIHandler:CloseAllFrames()
 	Debounce = true
 	for _, Frame in Frames:GetChildren() do
 		if Frame.Visible == true then
-			local OriginalPosition = Frame.Position
+			local OriginalPosition = Frame:GetAttribute("OriginalPosition")
+
+			if not OriginalPosition then
+				OriginalPosition = Frame.Position
+				Frame:SetAttribute("OriginalPosition", OriginalPosition)
+			end
 			local OutTween = TweenService:Create(
 				Frame,
 				TweenInfo.new(0.2),
