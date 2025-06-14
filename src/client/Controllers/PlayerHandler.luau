@@ -7,7 +7,7 @@ local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 
 -- // Remotes
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+--local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 
 -- // Objects
 
@@ -15,7 +15,6 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local PlayerHandler = {}
 
 function PlayerHandler:Start()
-
 	local StealAnim = nil
 	LocalPlayer:GetAttributeChangedSignal("Stealing"):Connect(function()
 		local isStealing = LocalPlayer:GetAttribute("Stealing")

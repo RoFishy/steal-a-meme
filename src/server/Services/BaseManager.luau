@@ -91,7 +91,7 @@ function BaseManager:Start()
 		local Components = Base.Components
 		local LockButton: Part = Components.LockButton
 		local RobuxLockButton: Part = Components.LockButtonRBX
-		local CollectArea: Model = Components.CollectZone.CollectPart
+		--local CollectArea: Model = Components.CollectZone.CollectPart
 		local CollisionPart: BasePart = Components.CollectZone.CollisionPart
 
 		CollisionPart.Touched:Connect(function(hit: Part)

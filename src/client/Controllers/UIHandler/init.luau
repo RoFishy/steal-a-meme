@@ -35,6 +35,9 @@ local HideBeam = Remotes.HideBeam
 local CurrentLuck = ReplicatedStorage.CurrentLuck
 local LuckTime = ReplicatedStorage.LuckTime
 
+-- // conveyor speed
+local SpeedTime = ReplicatedStorage.SpeedTime
+
 -- // Types
 local Modules = ReplicatedStorage:WaitForChild("Modules")
 local Types = require(Modules.Types)
@@ -68,6 +71,7 @@ local InviteButton = RightButtons.Invite
 local StatsHolder = HUD.Stats
 local CashLabel = StatsHolder.coins
 local LuckLabel = StatsHolder.luck
+local SpeedLabel = StatsHolder.beltspeed
 
 local MusicButton = HUD.Music
 
@@ -259,6 +263,20 @@ function UIHandler:Start()
 		end
 	end)
 
+	-- //
+	SpeedLabel.Visible = false
+	StatsHolder.speedimg.Visible = false
+	SpeedTime:GetPropertyChangedSignal("Value"):Connect(function()
+		if SpeedTime.Value > 0 then
+			StatsHolder.speedimg.Visible = true
+			SpeedLabel.Visible = true
+			local Time = convertToMS(SpeedTime.Value)
+			SpeedLabel.Text = `x2 Belt Speed: {Time}`
+		else
+			StatsHolder.speedimg.Visible = false
+			SpeedLabel.Visible = false
+		end
+	end)
 	-- // music
 	local musicOn = true
 	Button(MusicButton, function()

@@ -116,6 +116,14 @@ function SpawnManager.Init()
 end
 
 function SpawnManager:Start()
+	ReplicatedStorage.SpeedTime:GetPropertyChangedSignal("Value"):Connect(function()
+		if ReplicatedStorage.SpeedTime.Value > 0 then
+			SPAWN_INTERVAL = 2
+		else
+			SPAWN_INTERVAL = 5
+		end
+	end)
+
 	EndPart.Touched:Connect(function(Hit)
 		if not Hit.Parent then
 			return

@@ -15,6 +15,9 @@ local function GetRandomIndexFromDictionary(dictionary)
 	return indexes[math.random(1, #indexes)]
 end
 
+-- // other
+local speedConn = nil
+
 return {
 	-- // Bases
 	BypassLockCooldown = {
@@ -63,6 +66,54 @@ return {
 
 			local BaseManager = require(ServerScriptService.Services.BaseManager)
 			BaseManager:LockBase(BaseManager:GetBaseNameFromPlayer(Player), 900)
+			return
+		end,
+	},
+
+	-- // Conveyor SPeed
+	["10m Conveyor Speed Boost"] = {
+		ProductId = 3307238948,
+		Callback = function(Player: Player)
+			local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+			ReplicatedStorage.SpeedTime.Value += 600
+			ReplicatedStorage.Remotes.ShowNotification:FireAllClients(
+				`{Player.Name} has purchased 2x conveyor speed for 10 minutes!`,
+				Color3.fromRGB(0, 255, 0)
+			)
+			if not speedConn then
+				speedConn = task.spawn(function()
+					while ReplicatedStorage.SpeedTime.Value > 0 do
+						task.wait(1)
+						ReplicatedStorage.SpeedTime.Value -= 1
+					end
+					task.cancel(speedConn)
+					speedConn = nil
+				end)
+			end
+			return
+		end,
+	},
+	["20m Conveyor Speed Boost"] = {
+		ProductId = 3307239001,
+		Callback = function(Player: Player)
+			local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+			ReplicatedStorage.SpeedTime.Value += 1200
+			ReplicatedStorage.Remotes.ShowNotification:FireAllClients(
+				`{Player.Name} has purchased 2x conveyor speed for 20 minutes!`,
+				Color3.fromRGB(0, 255, 0)
+			)
+			if not speedConn then
+				speedConn = task.spawn(function()
+					while ReplicatedStorage.SpeedTime.Value > 0 do
+						task.wait(1)
+						ReplicatedStorage.SpeedTime.Value -= 1
+					end
+					task.cancel(speedConn)
+					speedConn = nil
+				end)
+			end
 			return
 		end,
 	},

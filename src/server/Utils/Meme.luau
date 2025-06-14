@@ -29,7 +29,7 @@ local SpecialFolder = ReplicatedStorage.Objects.Special
 
 -- // Constants
 local NUMBER_SUFFIX = { "K", "M", "B", "T", "q", "Q", "s", "S", "O", "N", "d", "U", "D" }
-local STEAL_ANIM_ID = "rbxassetid://76125639884956"
+--local STEAL_ANIM_ID = "rbxassetid://76125639884956"
 
 local SpecialInfo = {
 	Golden = {
@@ -655,9 +655,9 @@ function Meme:AddToSlot(Slot: Model, LoadData: boolean?, OfflineIncome: number?,
 	self.Model:PivotTo(targetPivot)
 
 	task.delay(0.3, function()
-		--self.Model:PivotTo(targetPivot)
+		self.Model:PivotTo(targetPivot)
 		self.RootPart.Anchored = true
-		--self.Model:PivotTo(targetPivot)
+		self.Model:PivotTo(targetPivot)
 	end)
 
 	pcall(function()
@@ -798,9 +798,23 @@ function Meme:SetupConnections()
 	ProximityPrompt.ObjectText = self.Name .. " $" .. self.Info.Price
 	ProximityPrompt.HoldDuration = 0.25
 
+	local DefaultWalkspeed = self.Model.Humanoid.WalkSpeed
+	local FasterWalkspeed = DefaultWalkspeed * 2
+
 	self.Prompt = ProximityPrompt
 	local humConnect
 	local moveConn
+
+	table.insert(
+		self.Connections,
+		ReplicatedStorage.SpeedTime:GetPropertyChangedSignal("Value"):Connect(function()
+			if ReplicatedStorage.SpeedTime.Value > 0 then
+				self.Model.Humanoid.WalkSpeed = FasterWalkspeed
+			else
+				self.Model.Humanoid.WalkSpeed = DefaultWalkspeed
+			end
+		end)
+	)
 
 	self.CurrentPos = nil
 	table.insert(
