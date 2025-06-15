@@ -977,12 +977,25 @@ function Meme:SetupConnections()
 						Sound:Destroy()
 					end)
 				else
-					local sound = SoundService.Success:Clone()
-					sound.Parent = Player.PlayerGui
+					local sound
+					if self.Info.Sound then
+						sound = Instance.new("Sound")
+						sound.Volume = 1.5
+						sound.SoundId = "rbxassetid://" .. tostring(self.Info.Sound)
+					else
+						sound = SoundService.Success:Clone()
+					end
+					sound.Parent = self.RootPart
 					sound:Play()
-					sound.Ended:Once(function()
-						sound:Destroy()
-					end)
+					if self.Info.SoundCutoff then
+						task.delay(self.Info.SoundCutoff, function()
+							sound:Destroy()
+						end)
+					else
+						sound.Ended:Once(function()
+							sound:Destroy()
+						end)
+					end
 				end
 
 				self.Model.Humanoid.WalkSpeed = 10
