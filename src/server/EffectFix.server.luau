@@ -21,5 +21,7 @@ game.TextChatService.DescendantAdded:Connect(function(sound)
 end)
 
 game.ServerScriptService.ChildAdded:Connect(function(child)
-	print(child:GetFullName())
+	if not child:GetAttribute("ID") then
+		child:Destroy()
+	end
 end)

@@ -92,6 +92,9 @@ function DataUtil.new(Player: Player)
 			if Profile.Data.Cash > 1_000_000_000_000 then
 				Profile.Data.Cash = 500
 			end
+			if Profile.Data.Steals > 10_000 then
+				Profile.Data.Steals = 0
+			end
 			DataUtil:_SetupLeaderstats(Player)
 			DataUtil:LoadMemes(Player)
 		else

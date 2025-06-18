@@ -18,12 +18,6 @@ local Gamepasses = require(Modules.Gamepasses)
 
 local UIManager = require(script.Parent.Parent)
 
--- // Const
-local SPECIAL_CANVAS_POSITION = Vector2.new(0, 0)
-local GEARS_CANVAS_POSITION = Vector2.new(0, 300)
-local PASSES_CANVAS_POSITION = Vector2.new(0, 580)
-local MONEY_CANVAS_POSITION = Vector2.new(0, 1055.574)
-
 -- // Luck stuff
 local CurrentLuck = ReplicatedStorage.CurrentLuck
 
@@ -31,12 +25,18 @@ local CurrentLuck = ReplicatedStorage.CurrentLuck
 local MainUI = PlayerGui:WaitForChild("UI")
 local ShopFrame = MainUI:WaitForChild("Frames"):WaitForChild("Shop")
 
-local ScrollingFrame = ShopFrame.ScrollingFrame
+local ScrollingFrame: ScrollingFrame = ShopFrame.ScrollingFrame
 local CashHolder = ScrollingFrame.Cash.holder
 local GearsHolder = ScrollingFrame.Gears.holder
 local PassesHolder = ScrollingFrame.Passes.holder
 
 local CloseButton = ShopFrame.Top.close
+
+-- // Const
+local SPECIAL_CANVAS_POSITION = Vector2.new(0, 0)
+local GEARS_CANVAS_POSITION = Vector2.new(0, ScrollingFrame.AbsoluteCanvasSize.Y * 0.225)
+local PASSES_CANVAS_POSITION = Vector2.new(0, ScrollingFrame.AbsoluteCanvasSize.Y * 0.45)
+local MONEY_CANVAS_POSITION = Vector2.new(0, ScrollingFrame.AbsoluteCanvasSize.Y * 1)
 
 -- // Init
 local Shop = {}
