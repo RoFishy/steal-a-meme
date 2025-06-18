@@ -101,7 +101,8 @@ function BaseManager:Start()
 					return
 				end
 				if not table.find(self.WhitelistedPlayers[Base.Name], Player) then
-					Player:Kick("Anticheat - Attempted to noclip into wrong base.")
+					print(Player.Name .. " tried to noclip into wrong base!")
+					--Player:Kick("Anticheat - Attempted to noclip into wrong base.")
 				end
 			end
 		end)
