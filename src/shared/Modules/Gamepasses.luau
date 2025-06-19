@@ -31,6 +31,7 @@ return {
 			return
 		end,
 	},
+	--[[
 	["Admin"] = {
 		Id = 1244393091,
 		Callback = function(Player: Player)
@@ -46,6 +47,8 @@ return {
 			hd:SetRank(Player, rankId, rankType)
 		end,
 	},
+	]]
+	--
 	["Galaxy Bat"] = {
 		Id = 1244447495,
 		Callback = function(Player: Player)
