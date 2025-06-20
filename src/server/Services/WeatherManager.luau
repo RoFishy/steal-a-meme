@@ -53,7 +53,7 @@ function WeatherManager:Start()
 				while EventValues.StartingIn.Value > 0 do
 					task.wait(1)
 					EventValues.StartingIn.Value -= 1
-					TimerString.Value = convertToMS(EventValues.StartingIn.Value)
+					TimerString.Value = `Starting in {convertToMS(EventValues.StartingIn.Value)}`
 				end
 
 				TimerString.Value = ""
@@ -76,9 +76,12 @@ function WeatherManager:Start()
 				while EventValues.TimeLeft.Value > 0 do
 					task.wait(1)
 					EventValues.TimeLeft.Value -= 1
+					TimerString.Value = `Happening for {convertToMS(EventValues.TimeLeft.Value)}`
 				end
-				EventValues.Active.Values = false
+				EventValues.Active.Value = false
 				ShowNotification:FireAllClients(`The {Name} event has ended!`)
+				self:ResetLighting()
+				self:SetDefaultLighting()
 			end
 		end)
 	end
