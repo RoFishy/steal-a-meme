@@ -40,7 +40,7 @@ local SPECIAL_CHANCES = {
 	Diamond = 10,
 }
 local WEATHER_SPAWN_CHANCES = {
-	Flaming = 25,
+	Flaming = 45,
 }
 
 -- // Variables
