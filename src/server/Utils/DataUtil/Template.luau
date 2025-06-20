@@ -15,6 +15,9 @@ local DataTemplate: Types.UserData = {
 		Normal = {},
 		Golden = {},
 		Diamond = {},
+
+		-- // Weather events
+		Flaming = {},
 	},
 	NewPlayer = true,
 	ClaimedVIPPet = true,

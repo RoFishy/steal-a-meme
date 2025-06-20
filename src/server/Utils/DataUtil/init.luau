@@ -263,7 +263,6 @@ function DataUtil:LoadMemes(Player: Player)
 				continue
 			end
 			OpenSlot:SetAttribute("Meme", Slot.Name)
-			print(Slot.Special)
 			local _meme = Meme.new(Slot.Name, Slot.Rarity, CFrame.new(0, 0, 0), Slot.Special, true)
 			MemeReferences[ID] = _meme.Model
 			_meme.Model:SetAttribute("ID", ID)

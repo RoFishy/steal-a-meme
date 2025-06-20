@@ -24,6 +24,8 @@ local EndPart = ConveyorSystem.End
 
 local TimersScreen = workspace.Spawn.Timers.Screen
 
+local WeatherEventsFolder = ReplicatedStorage.WeatherEvents
+
 local GuaranteedRequirements = {
 	Mythical = 900,
 	Legendary = 300,
@@ -36,6 +38,9 @@ local SPAWN_INTERVAL = 5
 local SPECIAL_CHANCES = {
 	Golden = 25,
 	Diamond = 10,
+}
+local WEATHER_SPAWN_CHANCES = {
+	Flaming = 25,
 }
 
 -- // Variables
@@ -69,12 +74,12 @@ local function GetNameFromValue(Dictionary, Value)
 	end
 end
 
-local function GetSpecialChance()
+local function GetChance(ChancesList: {})
 	local RandomNumber = math.random(1, 100)
 
 	local LowestPotentialName, LowestPotentialValue = nil, nil
 
-	for Name, Chance in SPECIAL_CHANCES do
+	for Name, Chance in ChancesList do
 		if RandomNumber <= Chance then
 			if not LowestPotentialValue then
 				LowestPotentialValue = Chance
@@ -89,6 +94,14 @@ local function GetSpecialChance()
 	end
 
 	return LowestPotentialName
+end
+
+local function GetCurrentWeatherEvent()
+	for _, Values in WeatherEventsFolder:GetChildren() do
+		if Values.Active.Value == true then
+			return Values.Name
+		end
+	end
 end
 
 function Format(Int)
@@ -169,7 +182,15 @@ function SpawnManager:Start()
 		--local Rarity = "Common"
 		local RandomSpawn =
 			IndexDictionary(Spawns[Rarity]["Spawns"], math.random(1, GetDictionaryLength(Spawns[Rarity]["Spawns"])))
-		local Chance = GetSpecialChance()
+		local Chance = GetChance(SPECIAL_CHANCES)
+
+		local CurrentWeatherEvent = GetCurrentWeatherEvent()
+		if CurrentWeatherEvent then
+			local WeatherChance = GetChance(WEATHER_SPAWN_CHANCES)
+			if WeatherChance then
+				Chance = WeatherChance
+			end
+		end
 
 		local ModelId = HttpService:GenerateGUID(false)
 		CurrentMemes[ModelId] =

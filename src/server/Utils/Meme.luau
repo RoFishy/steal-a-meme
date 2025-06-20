@@ -40,6 +40,10 @@ local SpecialInfo = {
 		IncomeMultiplier = 1.5,
 		Color = Color3.fromRGB(0, 174, 255),
 	},
+	Flaming = {
+		IncomeMultiplier = 1.5,
+		Color = Color3.fromRGB(255, 0, 0),
+	},
 }
 
 -- // Local Functions
@@ -156,7 +160,7 @@ end
 local Meme = {}
 Meme.__index = Meme
 
-function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, Special: "Golden" | "Diamond"?, LoadData: boolean?)
+function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, Special: string?, LoadData: boolean?)
 	local MemeInfo = Spawns[Type]["Spawns"][Name]
 	local RarityFolder = SpawnsFolder:FindFirstChild(Type)
 	assert(RarityFolder, "Rarity folder not found")
@@ -198,7 +202,7 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, Special: "G
 
 	self:MoveTo(workspace.ConveyorSystem.End.Position)
 
-	if Special and (Special == "Golden" or Special == "Diamond") then
+	if Special then
 		self:SetupSpecialMeme(LoadData)
 	end
 
@@ -240,8 +244,6 @@ function Meme:SetupSpecialMeme(LoadData: boolean?)
 	end
 
 	self.Model.Parent = workspace[self.Special .. "Memes"]
-	--local Highlight = Folder:FindFirstChild("Highlight"):Clone()
-	--Highlight.Parent = self.Model
 
 	if not LoadData then
 		ShowNotification:FireAllClients(
