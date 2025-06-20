@@ -23,10 +23,12 @@ local IndexFrame = MainUI:WaitForChild("Frames"):WaitForChild("Index")
 local NormalHolder = IndexFrame.Normal
 local GoldenHolder = IndexFrame.Gold
 local DiamondHolder = IndexFrame.Diamond
+local FlamingHolder = IndexFrame.Flaming
 
 local NormalButton = IndexFrame.NormalBtn
 local GoldenButton = IndexFrame.GoldBtn
 local DiamondButton = IndexFrame.DiamondBtn
+local FlamingBtn = IndexFrame.FlamingBtn
 
 local TopHolder = IndexFrame.Top
 local CloseButton = TopHolder.close
@@ -65,6 +67,7 @@ function Index:Start()
 			NormalHolder.Visible = false
 			DiamondHolder.Visible = false
 			GoldenHolder.Visible = true
+			FlamingHolder.Visible = false
 		end)
 	)
 	table.insert(
@@ -73,6 +76,7 @@ function Index:Start()
 			NormalHolder.Visible = true
 			DiamondHolder.Visible = false
 			GoldenHolder.Visible = false
+			FlamingHolder.Visible = false
 		end)
 	)
 	table.insert(
@@ -81,6 +85,16 @@ function Index:Start()
 			NormalHolder.Visible = false
 			DiamondHolder.Visible = true
 			GoldenHolder.Visible = false
+			FlamingHolder.Visible = false
+		end)
+	)
+	table.insert(
+		self.Junk,
+		Button(FlamingBtn, function()
+			NormalHolder.Visible = false
+			DiamondHolder.Visible = false
+			GoldenHolder.Visible = false
+			FlamingHolder.Visible = true
 		end)
 	)
 end
@@ -92,6 +106,19 @@ function Index:SetMemes()
 			continue
 		end
 		if table.find(PlayerMemeIndex.Normal, MemeFrame.Name) then
+			MemeFrame.Icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+			MemeFrame.name.Text = MemeFrame.Name
+			TotalCollected += 1
+		else
+			MemeFrame.Icon.ImageColor3 = Color3.fromRGB(0, 0, 0)
+			MemeFrame.name.Text = "???"
+		end
+	end
+	for _, MemeFrame in FlamingHolder:GetChildren() do
+		if not MemeFrame:IsA("Frame") then
+			continue
+		end
+		if table.find(PlayerMemeIndex.Flaming, MemeFrame.Name) then
 			MemeFrame.Icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
 			MemeFrame.name.Text = MemeFrame.Name
 			TotalCollected += 1
@@ -126,7 +153,7 @@ function Index:SetMemes()
 			MemeFrame.name.Text = "???"
 		end
 	end
-	AmountFound.Text = `{TotalCollected}/98`
+	AmountFound.Text = `{TotalCollected}/130`
 end
 
 function Index:Stop()
