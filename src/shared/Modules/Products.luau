@@ -477,6 +477,87 @@ return {
 			return Signals.IncreaseServerLuck:Fire()
 		end,
 	},
+
+	["ForeverPack1"] = {
+		ProductId = 3312923714,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local DataUtil = require(Utils.DataUtil)
+
+			DataUtil.ClaimNextForeverPackReward(Player)
+
+			return
+		end,
+	},
+
+	["ForeverPack2"] = {
+		ProductId = 3312923870,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local DataUtil = require(Utils.DataUtil)
+
+			DataUtil.ClaimNextForeverPackReward(Player)
+
+			return
+		end,
+	},
+
+	["ForeverPack3"] = {
+		ProductId = 3312923925,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local DataUtil = require(Utils.DataUtil)
+
+			DataUtil.ClaimNextForeverPackReward(Player)
+
+			return
+		end,
+	},
+
+	["ForeverPack4"] = {
+		ProductId = 3312923968,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local DataUtil = require(Utils.DataUtil)
+
+			DataUtil.ClaimNextForeverPackReward(Player)
+
+			return
+		end,
+	},
+
+	["ForeverPack5"] = {
+		ProductId = 3312924078,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local DataUtil = require(Utils.DataUtil)
+
+			DataUtil.ClaimNextForeverPackReward(Player)
+
+			return
+		end,
+	},
+
 	["x4 Luck"] = {
 		ProductId = 3302030707,
 		Callback = function(Player: Player)

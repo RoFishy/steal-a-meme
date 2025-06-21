@@ -22,6 +22,8 @@ local DataTemplate: Types.UserData = {
 	NewPlayer = true,
 	ClaimedVIPPet = true,
 	ClaimedFreePet = false,
+	ForeverPack = {},
+	LastForeverPackReset = 0,
 }
 
 return DataTemplate

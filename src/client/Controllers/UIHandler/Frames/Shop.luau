@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MarketplaceService = game:GetService("MarketplaceService")
+local ForeverPack = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ForeverPack"))
 
 -- // Player
 local LocalPlayer = Players.LocalPlayer
@@ -21,6 +22,10 @@ local UIManager = require(script.Parent.Parent)
 -- // Luck stuff
 local CurrentLuck = ReplicatedStorage.CurrentLuck
 
+-- // Packages
+local Packages = ReplicatedStorage:WaitForChild("Packages")
+local Replica = require(Packages.Replica)
+
 -- // UI
 local MainUI = PlayerGui:WaitForChild("UI")
 local ShopFrame = MainUI:WaitForChild("Frames"):WaitForChild("Shop")
@@ -37,6 +42,24 @@ local SPECIAL_CANVAS_POSITION = Vector2.new(0, 0)
 local GEARS_CANVAS_POSITION = Vector2.new(0, ScrollingFrame.AbsoluteCanvasSize.Y * 0.225)
 local PASSES_CANVAS_POSITION = Vector2.new(0, ScrollingFrame.AbsoluteCanvasSize.Y * 0.45)
 local MONEY_CANVAS_POSITION = Vector2.new(0, ScrollingFrame.AbsoluteCanvasSize.Y * 1)
+
+local FOREVER_PACK_PURCHASE = Color3.fromRGB(101, 232, 0)
+local FOREVER_PACK_NEXT = Color3.fromRGB(129, 129, 129)
+
+-- // Local func
+local function GetLowestIndex(Table: {}): number
+	local CurrentLowest
+	for index, _ in Table do
+		if not CurrentLowest then
+			CurrentLowest = index
+		else
+			if index < CurrentLowest then
+				CurrentLowest = index
+			end
+		end
+	end
+	return tonumber(CurrentLowest) or CurrentLowest
+end
 
 -- // Init
 local Shop = {}
@@ -58,8 +81,109 @@ function Shop.Init()
 	end)
 end
 
+local LastForeverPackReset = 0
+
+local ButtonShit = {}
+Shop.UpdateForeverPack = function(ForeverPackTable)
+	local ForeverPackHolder: Frame = ShopFrame.ScrollingFrame.ForeverPack
+
+	for index, v in ButtonShit do
+		v()
+		table.remove(ButtonShit, index)
+	end
+
+	for _, v: Frame in ForeverPackHolder.Main:GetChildren() do
+		if v:IsA("Frame") and v.Visible then
+			v:Destroy()
+		end
+	end
+
+	local LowestIndex = GetLowestIndex(ForeverPackTable)
+
+	for Index, Data in ForeverPackTable do
+		Index = tonumber(Index)
+		local RewardIndex = Data.RewardIndex
+
+		local new: Frame = ForeverPackHolder.Main:FindFirstChild(Index) or ForeverPackHolder.Main.Template:Clone()
+		new.Name = Index
+		new.LayoutOrder = Index
+		new.ClaimBtn.price.Text = tonumber(ForeverPack.GetPriceFromIndex(tonumber(Index)))
+				and utf8.char(0xE002) .. MarketplaceService:GetProductInfo(
+					ForeverPack.GetPriceFromIndex(tonumber(Index)),
+					Enum.InfoType.Product
+				).PriceInRobux
+			or "FREE"
+		new.Visible = true
+
+		if Index == LowestIndex then
+			new.ClaimBtn.BackgroundColor3 = FOREVER_PACK_PURCHASE
+		else
+			new.ClaimBtn.BackgroundColor3 = FOREVER_PACK_NEXT
+		end
+
+		table.insert(
+			ButtonShit,
+			Button(new.ClaimBtn, function()
+				local Updated = ReplicatedStorage.Remotes.ClaimForeverPack:InvokeServer()
+
+				if Updated then
+					for index, v in ButtonShit do
+						v()
+						table.remove(ButtonShit, index)
+					end
+					Shop.UpdateForeverPack(Updated)
+				end
+			end)
+		)
+		--[[
+				new.ClaimBtn.MouseButton1Up:Connect(function()
+			local Updated = ReplicatedStorage.Remotes.ClaimForeverPack:InvokeServer()
+
+			if Updated then
+				Shop.UpdateForeverPack(Updated)
+			end
+		end)
+		]]
+		--
+		new.RewardLabel.Text = ForeverPack.Rewards[RewardIndex].Text
+		new.ImageLabel.Image = ForeverPack.Rewards[RewardIndex].Image
+		new.Parent = ForeverPackHolder.Main
+	end
+end
+
 function Shop:Start()
+	task.spawn(function()
+		while task.wait(1) do
+			local TimeLeft = 21600 - (workspace:GetServerTimeNow() - LastForeverPackReset)
+
+			if TimeLeft > 0 then
+				local hours = math.floor(TimeLeft / 3600)
+				local minutes = math.floor((TimeLeft % 3600) / 60)
+				local seconds = TimeLeft % 60
+
+				ShopFrame.ScrollingFrame.ForeverPack.RefreshLabel.Text =
+					string.format("Refreshes in %02d:%02d:%02d", hours, minutes, seconds)
+			else
+				ShopFrame.ScrollingFrame.ForeverPack.RefreshLabel.Text = "Refreshing Soon..."
+			end
+		end
+	end)
+
+	Replica.OnNew("PlayerData", function(_replica)
+		Shop.UpdateForeverPack(_replica.Data.ForeverPack)
+		LastForeverPackReset = _replica.Data.LastForeverPackReset
+		_replica:OnSet({ "ForeverPack" }, function(new_value)
+			Shop.UpdateForeverPack(new_value)
+		end)
+
+		_replica:OnSet({ "LastForeverPackReset" }, function(new_value)
+			LastForeverPackReset = new_value
+		end)
+	end)
+	Replica.RequestData()
+
 	-- // close btn
+
 	table.insert(
 		self.Junk,
 		Button(CloseButton, function()

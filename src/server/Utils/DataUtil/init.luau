@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreService = game:GetService("DataStoreService")
 
 -- // shared modules
+local ForeverPack = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ForeverPack"))
 local Modules = ReplicatedStorage.Modules
 local Types = require(Modules.Types)
 
@@ -59,6 +60,55 @@ end
 -- // Module
 local DataUtil = {}
 
+local PackResetTime = 21600
+
+DataUtil.RefreshForeverPack = function(Player)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.LastForeverPackReset = workspace:GetServerTimeNow()
+		Profile.Data.ForeverPack = {}
+
+		for i = 1, 5 do
+			local ChosenRewardIndex = ForeverPack.PickRandomRewardIndex()
+
+			Profile.Data.ForeverPack[tostring(i)] = {
+				RewardIndex = ChosenRewardIndex,
+			}
+		end
+	end
+
+	local _replica = Replicas[Player]
+	_replica:Set({ "ForeverPack" }, Profile.Data.ForeverPack)
+	_replica:Set({ "LastForeverPackReset" }, Profile.Data.LastForeverPackReset)
+end
+
+DataUtil.ClaimNextForeverPackReward = function(Player)
+	local Profile = Profiles[Player]
+	if Profile then
+		local NextTableIndex = ForeverPack.GetNextIndex(Profile.Data.ForeverPack)
+		--print("Server: ", Profile.Data.ForeverPack, NextTableIndex)
+		local RewardIndex = Profile.Data.ForeverPack[tostring(NextTableIndex)].RewardIndex
+
+		task.spawn(function()
+			ForeverPack.Rewards[RewardIndex].ClaimFunction(Player)
+		end)
+
+		Profile.Data.ForeverPack[tostring(NextTableIndex)] = nil
+
+		local ChosenRewardIndex = ForeverPack.PickRandomRewardIndex()
+
+		Profile.Data.ForeverPack[tostring(NextTableIndex + 5)] = {
+			RewardIndex = ChosenRewardIndex,
+		}
+
+		local _replica = Replicas[Player]
+		_replica:Set({ "ForeverPack" }, Profile.Data.ForeverPack)
+		_replica:Set({ "LastForeverPackReset" }, Profile.Data.LastForeverPackReset)
+
+		Remotes.ShowNotification:FireClient(Player, "Reward Claimed!", Color3.fromRGB(38, 255, 45))
+	end
+end
+
 function DataUtil.new(Player: Player)
 	local Profile = PlayerStore:StartSessionAsync(`{Player.UserId}`, {
 		Cancel = function()
@@ -76,7 +126,7 @@ function DataUtil.new(Player: Player)
 
 		if Player.Parent == Players then
 			Profiles[Player] = Profile
-			if GetDictionaryLength(Profile.Data.Index) > 3 and GetDictionaryLength(Profile.Data.Index.Normal) == 0 then
+			if GetDictionaryLength(Profile.Data.Index) > 4 and GetDictionaryLength(Profile.Data.Index.Normal) == 0 then
 				local normalTable = {}
 				for index, value in Profile.Data.Index do
 					if typeof(index) == "string" then
@@ -88,6 +138,7 @@ function DataUtil.new(Player: Player)
 				Profile.Data.Index["Normal"] = normalTable
 				Profile.Data.Index.Golden = {}
 				Profile.Data.Index.Diamond = {}
+				Profile.Data.Index.Flaming = {}
 			end
 			if Profile.Data.Cash > 1_000_000_000_000 then
 				Profile.Data.Cash = 500
@@ -95,8 +146,23 @@ function DataUtil.new(Player: Player)
 			if Profile.Data.Steals > 10_000 then
 				Profile.Data.Steals = 0
 			end
+
 			DataUtil:_SetupLeaderstats(Player)
 			DataUtil:LoadMemes(Player)
+
+			if workspace:GetServerTimeNow() - Profile.Data.LastForeverPackReset >= PackResetTime then
+				DataUtil.RefreshForeverPack(Player)
+			end
+
+			task.spawn(function()
+				while Player and Player.Parent and Profiles[Player] do
+					if workspace:GetServerTimeNow() - Profile.Data.LastForeverPackReset >= PackResetTime then
+						DataUtil.RefreshForeverPack(Player)
+					end
+
+					task.wait(1)
+				end
+			end)
 		else
 			Profile:EndSession()
 		end

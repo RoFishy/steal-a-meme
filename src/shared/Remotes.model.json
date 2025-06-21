@@ -60,6 +60,10 @@
         {
             "Name": "CloseAllFrames",
             "ClassName": "RemoteEvent"
+        },
+        {
+            "Name": "ClaimForeverPack",
+            "ClassName": "RemoteFunction"
         }
     ]
 }
