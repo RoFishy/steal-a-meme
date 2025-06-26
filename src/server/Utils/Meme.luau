@@ -209,7 +209,7 @@ function Meme.new(Name: string, Type: string, SpawnLocation: CFrame, Special: st
 	self:SetupDisplayInfo()
 	self:SetupConnections()
 
-	self.DestroyConn = self.Model.Destroying:Once(function()
+	self.Model.Destroying:Once(function()
 		self:Destroy()
 	end)
 
@@ -279,6 +279,49 @@ function Meme:GetNewPrompt()
 	return ProximityPrompt
 end
 
+function Meme:ShowStolenMeme(Slot: Model)
+	local Model = self.Model:Clone()
+	Model.Parent = workspace
+
+	self.CurrentStolenMeme = Model
+
+	local RootPart = Model.HumanoidRootPart
+	local Attachment = RootPart.Attachment
+
+	local StolenText = ReplicatedStorage.Objects.Stolen
+	StolenText:Clone().Parent = Attachment.Billboard.Main
+
+	local cframe, size = self.Model:GetBoundingBox()
+	local modelPivot = self.Model:GetPivot()
+
+	local heightOffset = modelPivot.Position.Y - cframe.Position.Y + size.Y * 0.5
+	local targetPivot = Slot.Stand.CFrame
+		* CFrame.new(Vector3.new(0, Slot.Stand.Size.Y / 2, 0) + Vector3.new(0, heightOffset, 0))
+		* CFrame.Angles(0, math.rad(-90), 0)
+
+	RootPart.Anchored = false
+	RootPart.AssemblyLinearVelocity = Vector3.zero
+	RootPart.AssemblyAngularVelocity = Vector3.zero
+
+	Model:PivotTo(targetPivot)
+
+	task.delay(0.3, function()
+		Model:PivotTo(targetPivot)
+		RootPart.Anchored = true
+		Model:PivotTo(targetPivot)
+	end)
+
+	for _, d in Model:GetDescendants() do
+		if d:IsA("BasePart") or d:IsA("Decal") and d.Transparency < 1 then
+			d.Transparency = 0.7
+		end
+	end
+
+	return function()
+		Model:Destroy()
+	end
+end
+
 function Meme:Steal(StealPlayer: Player)
 	local _StealPlayerBase = GetPlayerBase(StealPlayer)
 	local _OpenSlot = self:GetOpenSlot(_StealPlayerBase.Slots)
@@ -309,15 +352,20 @@ function Meme:Steal(StealPlayer: Player)
 		end)
 	end
 
+	local StolenText = ReplicatedStorage.Objects.Stolen
+	StolenText:Clone().Parent = self.RootPart.Attachment.Billboard.Main
+
 	ShowNotification:FireClient(
 		self.PurchasePlayer,
 		`{StealPlayer.Name} is stealing your {self.Name}!`,
 		Color3.fromRGB(255, 0, 0)
 	)
 
+	local OldStand = self.CurrentStand
+
 	self:Cleanup()
 
-	StealPlayer:SetAttribute("Stealing", true)
+	StealPlayer:SetAttribute("Stealing", self.Model:GetAttribute("ID"))
 	local OGWalkSpeed = StealPlayer.Character.Humanoid.WalkSpeed
 	local speedOffset = StealPlayer.Character.Humanoid:GetAttribute("SpeedAddition")
 	if speedOffset then
@@ -360,6 +408,8 @@ function Meme:Steal(StealPlayer: Player)
 	Weld.Part0 = StealPlayer.Character.HumanoidRootPart
 	Weld.Part1 = self.Model.PrimaryPart
 
+	local InvisibleMeme = self:ShowStolenMeme(OldStand)
+
 	local StealPlayerBase = GetPlayerBase(StealPlayer)
 
 	local BaseComponents = StealPlayerBase.Components
@@ -401,6 +451,7 @@ function Meme:Steal(StealPlayer: Player)
 			self.RootPart.Anchored = true
 
 			Weld:Destroy()
+			StolenText:Destroy()
 			self.CurrentStand = OpenSlot
 			TogglePrompt:FireAllClients(self.Prompt, true)
 			self.BeingStolen = false
@@ -413,6 +464,7 @@ function Meme:Steal(StealPlayer: Player)
 				StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
 			end
 
+			InvisibleMeme()
 			self:AddToSlot(OpenSlot)
 		end
 	end)
@@ -458,6 +510,7 @@ function Meme:Steal(StealPlayer: Player)
 				self.RootPart.Anchored = true
 
 				Weld:Destroy()
+				StolenText:Destroy()
 				self.CurrentStand = OpenSlot
 				TogglePrompt:FireAllClients(self.Prompt, true)
 				self.BeingStolen = false
@@ -469,10 +522,43 @@ function Meme:Steal(StealPlayer: Player)
 					StealPlayer.Character.Humanoid.WalkSpeed = OGWalkSpeed
 				end
 
+				InvisibleMeme()
 				self:AddToSlot(OpenSlot)
 			end
 		end)
 	)
+
+	Remotes.StealBackMeme.OnServerEvent:Once(function()
+		Signal.ResetStolenMeme:Fire()
+	end)
+	Signal.StealBackMeme:Connect(function(_Player: Player)
+		if self.StolenPlayer and _Player == self.StolenPlayer then
+			ShowNotification:FireClient(StealPlayer, "Your meme has been stolen back!")
+			self:Cleanup()
+
+			local _Slots = OriginalPlayerBase.Slots
+			local _OpenSlot = self:GetOpenSlot(_Slots)
+			if not _OpenSlot then
+				ShowNotification:FireClient(_Player, "You don't have a free spot!")
+				self:Destroy()
+				return
+			end
+
+			Signal.RemoveMemeFromPlayer:Fire(OriginalPlayer, self)
+			Remotes.CloseAllFrames:FireClient(self.StolenPlayer)
+			_OpenSlot:SetAttribute("Meme", self.Name)
+			self.CashConnection = false
+
+			self.PurchasePlayer = self.StolenPlayer
+			self.CurrentStand = _OpenSlot
+			self:AddToSlot(_OpenSlot)
+
+			self.StolenPlayer = nil
+		end
+	end)
+	Signal.ResetStolenMeme:Connect(function()
+		self.StolenPlayer = nil
+	end)
 
 	--local db = false
 	table.insert(self.Connections, {
@@ -482,6 +568,9 @@ function Meme:Steal(StealPlayer: Player)
 	})
 	CollectZone.playerTouched(function(Player: Player)
 		if Player == StealPlayer then
+			if not Player:GetAttribute("Stealing") then
+				return
+			end
 			--db = true
 			--task.delay(4, function()
 			--db = false
@@ -502,6 +591,7 @@ function Meme:Steal(StealPlayer: Player)
 			StealPlayer:SetAttribute("Stealing", nil)
 			OpenSlot:SetAttribute("Meme", self.Name)
 
+			self.StolenPlayer = OriginalPlayer
 			self.PurchasePlayer = StealPlayer
 			self.CurrentStand = OpenSlot
 
@@ -510,8 +600,10 @@ function Meme:Steal(StealPlayer: Player)
 			self.RootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
 			self.RootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 			Weld:Destroy()
+			StolenText:Destroy()
 
 			self.BeingStolen = false
+			InvisibleMeme()
 			self:AddToSlot(OpenSlot)
 
 			local DataUtil = require(Utils.DataUtil)
@@ -525,6 +617,7 @@ function Meme:Steal(StealPlayer: Player)
 			end
 
 			TogglePrompt:FireAllClients(self.Prompt, true)
+			Remotes.StealBackMeme:FireClient(self.StolenPlayer, self.Name)
 		end
 	end)
 
@@ -555,7 +648,9 @@ function Meme:Steal(StealPlayer: Player)
 				self.RootPart.CanCollide = true
 
 				Weld:Destroy()
+				StolenText:Destroy()
 				self.BeingStolen = false
+				InvisibleMeme()
 				self:AddToSlot(OpenSlot)
 				TogglePrompt:FireAllClients(self.Prompt, true)
 			end
@@ -587,7 +682,9 @@ function Meme:Steal(StealPlayer: Player)
 			self.RootPart.CanCollide = true
 
 			Weld:Destroy()
+			StolenText:Destroy()
 			self.BeingStolen = false
+			InvisibleMeme()
 			self:AddToSlot(OpenSlot)
 			TogglePrompt:FireAllClients(self.Prompt, true)
 		end)
@@ -1151,6 +1248,7 @@ function Meme:Cleanup()
 		CollectButton.OfflineAttachment.Billboard.Frame.Visible = false
 
 		self.BeingStolen = false
+		self.CashConnection = false
 		self.CurrentStand = nil
 		self.CurrentEarned = 0
 	end
@@ -1158,7 +1256,9 @@ function Meme:Cleanup()
 end
 
 function Meme:Destroy()
-	self.DestroyConn:Disconnect()
+	if self.CurrentStolenMeme then
+		self.CurrentStolenMeme:Destroy()
+	end
 	self:Cleanup()
 	self.Model:Destroy()
 end

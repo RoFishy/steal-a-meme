@@ -27,7 +27,22 @@ local Floor = workspace.Floor
 --local LOCK_COOLDOWN = 30
 local BYPASS_COOLDOWN_PRODUCT = Products.BypassLockCooldown.ProductId
 
+-- // Constants
+local NUMBER_SUFFIX = { "K", "M", "B", "T", "q", "Q", "s", "S", "O", "N", "d", "U", "D" }
+
 -- // Local Functions
+local function FormatNumber(n)
+	if not tonumber(n) then
+		return n
+	end
+	if n < 1000 then
+		return math.floor(n)
+	end
+	local d = math.floor(math.log10(n) / 3) * 3
+	local s = tostring(n / (10 ^ d)):sub(1, 5)
+	return s .. tostring(NUMBER_SUFFIX[math.floor(d / 3)])
+end
+
 function Format(Int)
 	return string.format("%02i", Int)
 end
@@ -65,6 +80,7 @@ function BaseManager.Init()
 			Owner = nil,
 			Locked = false,
 			CooldownThread = nil,
+			ValueConnection = nil,
 		}
 		BaseManager.PlayersTryingToUnlock[Base.Name] = {}
 		BaseManager:ResetBase(Base.Name)
@@ -369,6 +385,7 @@ function BaseManager:AssignBase(Player: Player, Base: string)
 	local Components = BaseModel.Components
 	local Sign = Components.Sign
 	local SignGui = Sign.Main.Sign.SurfaceGui
+	local ValueGui = Sign.Main.Value.SurfaceGui
 	local CashMultiText = Components.CashMulti.Attachment.Billboard.Frame.TextLow
 
 	local leaderstats = Player:WaitForChild("leaderstats")
@@ -381,6 +398,25 @@ function BaseManager:AssignBase(Player: Player, Base: string)
 		Multiplier = Rebirths[PlayerRebirths.Value].Rewards.Multiplier or 1
 		CashMultiText.Text = `Cash Multiplier: {Multiplier}x`
 	end)
+
+	if Player:FindFirstChild("TotalValue") then
+		ValueGui.name.Text = `TOTAL VALUE: ${FormatNumber(Player.TotalValue.Value)}`
+		self.Bases[BaseName].ValueConnection = Player.TotalValue:GetPropertyChangedSignal("Value"):Connect(function()
+			ValueGui.name.Text = `TOTAL VALUE: ${FormatNumber(Player.TotalValue.Value)}`
+		end)
+	else
+		ValueGui.name.Text = `TOTAL VALUE: $0`
+		Player.ChildAdded:Connect(function(child)
+			if child.Name == "TotalValue" then
+				ValueGui.name.Text = `TOTAL VALUE: ${FormatNumber(Player.TotalValue.Value)}`
+				self.Bases[BaseName].ValueConnection = Player.TotalValue
+					:GetPropertyChangedSignal("Value")
+					:Connect(function()
+						ValueGui.name.Text = `TOTAL VALUE: ${FormatNumber(Player.TotalValue.Value)}`
+					end)
+			end
+		end)
+	end
 
 	SignGui:FindFirstChildOfClass("TextLabel").Text = `{Player.Name}'s Base`
 	self:TeleportPlayerToBase(Player, BaseName)
@@ -431,9 +467,16 @@ function BaseManager:ResetBase(Base: string)
 	local Components = Base.Components
 	local Sign = Components.Sign
 	local SignGui = Sign.Main.Sign.SurfaceGui
+	local ValueGui = Sign.Main.Value.SurfaceGui
 	local CashMultiText = Components.CashMulti.Attachment.Billboard.Frame.TextLow
 
 	CashMultiText.Text = "Cash Multiplier: 1x"
+
+	ValueGui.name.Text = "TOTAL VALUE: N/A"
+	if self.Bases[Base.Name].ValueConnection then
+		self.Bases[Base.Name].ValueConnection:Disconnect()
+		self.Bases[Base.Name].ValueConnection = nil
+	end
 
 	for _, Slot in Base.Slots:GetChildren() do
 		local collectAt = Slot.Collect.Attachment

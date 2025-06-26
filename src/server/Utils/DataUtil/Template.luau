@@ -24,6 +24,11 @@ local DataTemplate: Types.UserData = {
 	ClaimedFreePet = false,
 	ForeverPack = {},
 	LastForeverPackReset = 0,
+	Quests = {
+		LebronPortal = {
+			StolenMemes = 0,
+		},
+	},
 }
 
 return DataTemplate

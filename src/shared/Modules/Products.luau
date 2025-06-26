@@ -119,6 +119,29 @@ return {
 	},
 
 	-- // Memes
+	["Steal Back Meme"] = {
+		ProductId = 3315428161,
+		Callback = function(Player: Player)
+			-- // Services
+			local ServerScriptService = game:GetService("ServerScriptService")
+
+			-- // Utils
+			local Utils = ServerScriptService.Utils
+			local Signals = require(Utils.Signals)
+
+			Signals.StealBackMeme:Fire(Player)
+
+			local ReplicatedStorage = game:GetService("ReplicatedStorage")
+			ReplicatedStorage.Remotes.ShowNotification:FireClient(
+				Player,
+				"You have successfully stolen back your meme!",
+				Color3.fromRGB(0, 255, 0)
+			)
+
+			return
+		end,
+	},
+
 	["Legendary Meme"] = {
 		ProductId = 3305650625,
 		Callback = function(Player: Player)

@@ -222,6 +222,10 @@ return {
 
 				Sound = 93643676391320,
 			},
+			["Skibidi Toilet"] = {
+				Price = 400_000_000,
+				Income = 400_000,
+			},
 		},
 	},
 	["ROBUX"] = {
@@ -234,6 +238,15 @@ return {
 			["DaBaby Car"] = {
 				Price = 0,
 				Income = 500_000,
+			},
+		},
+	},
+	["QUEST"] = {
+		Rarity = 0,
+		Spawns = {
+			["Lebron"] = {
+				Price = 0,
+				Income = 25_000,
 			},
 		},
 	},

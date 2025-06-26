@@ -7,6 +7,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local ForeverPack = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ForeverPack"))
 local Modules = ReplicatedStorage.Modules
 local Types = require(Modules.Types)
+local Spawns = require(Modules.Spawns)
 
 -- // Modules
 local DataTemplate = require(script.Template)
@@ -186,6 +187,7 @@ function DataUtil:SetupReplica(Player: Player)
 	Replicas[Player] = _replica
 	_replica:Subscribe(Player)
 	_replica:Set({ "Index" }, Profile.Data.Index)
+	_replica:Set({ "QuestData" }, Profile.Data.Quests)
 end
 
 function DataUtil:FirstTimePlayer(Player: Player): boolean
@@ -280,6 +282,40 @@ function DataUtil:UpdatePlayersPurchasingMemes(NewTable: {})
 	PlayersPurchasingMemes = NewTable
 end
 
+function DataUtil:UpdateQuestData(Player, Quest, Key, Value)
+	local Profile = Profiles[Player]
+	if Profile then
+		Profile.Data.Quests[Quest][Key] = Value
+		local _replica = Replicas[Player]
+		_replica:Set({ "QuestData" }, Profile.Data.Quests)
+	end
+end
+
+function DataUtil:GetQuestData(Player)
+	local Profile = Profiles[Player]
+	if Profile then
+		return Profile.Data.Quests
+	end
+end
+
+function DataUtil:SetTotalValue(Player: Player)
+	local CurrentSlots = self:GetCurrentMemes(Player)
+	local TotalValue = 0
+
+	local Value = Player:FindFirstChild("TotalValue") or Instance.new("IntValue")
+	Value.Name = "TotalValue"
+	Value.Parent = Player
+
+	for _, Slot in CurrentSlots do
+		local MemeInfo = Spawns[Slot.Rarity]["Spawns"][Slot.Name]
+		local MemeCost = MemeInfo.Price
+
+		TotalValue += MemeCost
+	end
+
+	Value.Value = TotalValue
+end
+
 function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
 	local Profile = Profiles[Player]
 	if Profile then
@@ -310,6 +346,7 @@ function DataUtil:AddMemeToPlayer(Player: Player, MemeObj)
 			end
 			Remotes.ShowNotification:FireClient(Player, Text, Color3.fromRGB(0, 217, 255))
 		end
+		self:SetTotalValue(Player)
 	end
 end
 
@@ -351,6 +388,7 @@ function DataUtil:LoadMemes(Player: Player)
 				Remotes.DoubleCashFrame:FireClient(Player, CurrentOfflineCash)
 			end
 		end)
+		self:SetTotalValue(Player)
 	end
 end
 
